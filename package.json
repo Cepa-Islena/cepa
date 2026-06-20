@@ -1,0 +1,13 @@
+{
+  "name": "cepa",
+  "private": true,
+  "packageManager": "pnpm@11.5.3",
+  "scripts": {
+    "dev": "pnpm --filter @cepa/web dev",
+    "build": "pnpm --filter @cepa/web build",
+    "start": "pnpm --filter @cepa/web start",
+    "check": "pnpm --filter @cepa/web check",
+    "test": "pnpm --filter @cepa/web test",
+    "test:run": "pnpm --filter @cepa/web test:run"
+  }
+}
