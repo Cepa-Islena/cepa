@@ -98,19 +98,6 @@ a {
   text-decoration: none;
 }
 
-main section,
-footer,
-#shop,
-#products,
-#about,
-#delivery,
-#quiz,
-#contact,
-#la-cepa,
-#bundles {
-  scroll-margin-top: var(--sticky-offset);
-}
-
 .site-shell {
   min-height: 100vh;
 }
@@ -1721,7 +1708,7 @@ footer,
 
 @media (max-width: 640px) {
   :root {
-    --sticky-offset: 84px;
+    --sticky-offset: 68px;
   }
 
   .announcement {
