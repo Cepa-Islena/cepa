@@ -12,11 +12,10 @@ Cepa is a Next.js + TypeScript commerce MVP for a fast public storefront, Supaba
 
 ```bash
 pnpm install
-cp .env.example .env.local
 pnpm dev
 ```
 
-Required checkout/admin env vars:
+Keep local settings in a private `.env.local` file and production settings in Vercel environment variables. Do not commit env files. Required checkout/admin settings:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
