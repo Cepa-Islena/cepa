@@ -435,14 +435,20 @@ function MobileNav({ selectProduct, close }: { selectProduct: (productSlug: stri
 function ShopDropdown({ selectProduct }: { selectProduct: (productSlug: string) => void }) {
   return (
     <div className="shop-dropdown">
-      <button type="button" className="nav-dropdown-button">
+      <button type="button" className="nav-dropdown-button" aria-haspopup="menu">
         Shop <ChevronDown size={15} />
       </button>
-      <div className="shop-dropdown-menu">
+      <div className="shop-dropdown-menu" role="menu">
         {products.map((product) => (
-          <button key={product.slug} type="button" onClick={() => selectProduct(product.slug)}>
-            <span>{product.name}</span>
-            <small>{product.kind === "bundle" ? "Bundle" : product.size}</small>
+          <button key={product.slug} type="button" role="menuitem" onClick={() => selectProduct(product.slug)}>
+            <span className="shop-dropdown-thumb">
+              <ProductImage product={product} />
+            </span>
+            <span className="shop-dropdown-copy">
+              <span>{product.name}</span>
+              <small>{product.kind === "bundle" ? "Bundle" : product.size}</small>
+            </span>
+            <strong>{formatPrice(product.priceCents)}</strong>
           </button>
         ))}
       </div>
