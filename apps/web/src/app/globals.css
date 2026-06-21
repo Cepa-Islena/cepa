@@ -41,7 +41,7 @@
   --ink-soft: rgba(61, 11, 27, 0.72);
   --line: rgba(61, 11, 27, 0.24);
   --shadow: 0 24px 80px rgba(61, 11, 27, 0.16);
-  --sticky-offset: 152px;
+  --sticky-offset: 137px;
   color: var(--borra);
   background: var(--pulpa);
   font-family: "Coolvetica Cepa", Arial, sans-serif;

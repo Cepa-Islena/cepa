@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import {
   ArrowRight,
   ChevronDown,
@@ -59,7 +59,7 @@ function ProductImage({ product }: { product: Product }) {
   return <img src={product.image} alt="" loading="lazy" />;
 }
 
-const mobileAnchorGapPx = 0;
+const sectionAnchorGapPx = 0;
 
 export function Storefront({ commerceConfigured }: StorefrontProps) {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -133,13 +133,27 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
         if (!target) return;
 
         const headerHeight = document.querySelector<HTMLElement>(".site-header")?.getBoundingClientRect().height ?? 0;
-        const scrollTop = target.getBoundingClientRect().top + window.scrollY - headerHeight - mobileAnchorGapPx;
+        const dropStats = document.querySelector<HTMLElement>(".drop-stats");
+        const dropStatsStyle = dropStats ? window.getComputedStyle(dropStats) : null;
+        const dropStatsTop = dropStatsStyle?.position === "sticky" ? Number.parseFloat(dropStatsStyle.top) || 0 : 0;
+        const dropStatsBottom =
+          dropStatsStyle?.position === "sticky" ? dropStatsTop + (dropStats?.getBoundingClientRect().height ?? 0) : 0;
+        const stickyStackHeight = Math.max(headerHeight, dropStatsBottom);
+        const scrollTop = target.getBoundingClientRect().top + window.scrollY - stickyStackHeight - sectionAnchorGapPx;
 
         window.scrollTo({ top: Math.max(0, scrollTop), behavior: "smooth" });
         window.history.replaceState(null, "", `#${sectionId}`);
       });
     });
   }
+
+  useEffect(() => {
+    const sectionId = window.location.hash.slice(1);
+    if (!sectionId) return;
+
+    const timeout = window.setTimeout(() => scrollToSection(sectionId), 250);
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   async function checkout() {
     if (!cart.length) return;
@@ -225,7 +239,7 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
         <a className="brand-mark" href="#shop" aria-label="Cepa Isleña home">
           <img src="/brand/logo-borra.png" alt="Cepa Isleña" />
         </a>
-        <DesktopNav selectProduct={selectProduct} />
+        <DesktopNav selectProduct={selectProduct} scrollToSection={scrollToSection} />
         <button className="cart-button" type="button" onClick={() => setCartOpen(true)}>
           <ShoppingBag size={19} /> Cart <span>{cartCount(cart)}</span>
         </button>
@@ -417,13 +431,32 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
   );
 }
 
-function DesktopNav({ selectProduct }: { selectProduct: (productSlug: string) => void }) {
+function DesktopNav({
+  selectProduct,
+  scrollToSection,
+}: {
+  selectProduct: (productSlug: string) => void;
+  scrollToSection: (sectionId: string) => void;
+}) {
   return (
     <nav className="nav-links" aria-label="Main navigation">
-      <a href="#shop">Home</a>
-      <a href="#about">About Us</a>
-      <a href="#products">Order</a>
-      <a href="#contact">Contact Us</a>
+      {[
+        ["shop", "Home"],
+        ["about", "About Us"],
+        ["products", "Order"],
+        ["contact", "Contact Us"],
+      ].map(([id, label]) => (
+        <a
+          href={`#${id}`}
+          key={id}
+          onClick={(event) => {
+            event.preventDefault();
+            scrollToSection(id);
+          }}
+        >
+          {label}
+        </a>
+      ))}
       <ShopDropdown selectProduct={selectProduct} />
     </nav>
   );
