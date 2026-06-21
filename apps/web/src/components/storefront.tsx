@@ -59,6 +59,8 @@ function ProductImage({ product }: { product: Product }) {
   return <img src={product.image} alt="" loading="lazy" />;
 }
 
+const mobileAnchorGapPx = 10;
+
 export function Storefront({ commerceConfigured }: StorefrontProps) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -120,6 +122,23 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
     setSelectedProduct(product);
     setSearchQuery("");
     document.querySelector("#la-cepa")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function scrollToSection(sectionId: string) {
+    setMobileNavOpen(false);
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const target = document.getElementById(sectionId);
+        if (!target) return;
+
+        const headerHeight = document.querySelector<HTMLElement>(".site-header")?.getBoundingClientRect().height ?? 0;
+        const scrollTop = target.getBoundingClientRect().top + window.scrollY - headerHeight - mobileAnchorGapPx;
+
+        window.scrollTo({ top: Math.max(0, scrollTop), behavior: "smooth" });
+        window.history.replaceState(null, "", `#${sectionId}`);
+      });
+    });
   }
 
   async function checkout() {
@@ -212,7 +231,9 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
         </button>
       </header>
 
-      {mobileNavOpen ? <MobileNav selectProduct={selectProduct} close={() => setMobileNavOpen(false)} /> : null}
+      {mobileNavOpen ? (
+        <MobileNav selectProduct={selectProduct} close={() => setMobileNavOpen(false)} scrollToSection={scrollToSection} />
+      ) : null}
 
       <section className="drop-stats" aria-label="Live drop stats">
         <div>
@@ -408,21 +429,35 @@ function DesktopNav({ selectProduct }: { selectProduct: (productSlug: string) =>
   );
 }
 
-function MobileNav({ selectProduct, close }: { selectProduct: (productSlug: string) => void; close: () => void }) {
+function MobileNav({
+  selectProduct,
+  close,
+  scrollToSection,
+}: {
+  selectProduct: (productSlug: string) => void;
+  close: () => void;
+  scrollToSection: (sectionId: string) => void;
+}) {
   return (
     <nav className="mobile-nav" aria-label="Mobile navigation">
       {["shop", "about", "products", "delivery", "quiz", "contact"].map((id) => (
-        <a key={id} href={`#${id}`} onClick={close}>
+        <button
+          key={id}
+          type="button"
+          onClick={() => scrollToSection(id)}
+        >
           {id === "products" ? "Order" : id}
-        </a>
+        </button>
       ))}
       {products.map((product) => (
         <button
           key={product.slug}
           type="button"
           onClick={() => {
-            selectProduct(product.slug);
             close();
+            window.requestAnimationFrame(() => {
+              window.requestAnimationFrame(() => selectProduct(product.slug));
+            });
           }}
         >
           {product.name}

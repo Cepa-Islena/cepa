@@ -1681,6 +1681,7 @@ a {
   }
 
   .spotlight img {
+    height: 320px;
     max-height: 320px;
   }
 
@@ -1708,7 +1709,7 @@ a {
 
 @media (max-width: 640px) {
   :root {
-    --sticky-offset: 68px;
+    --sticky-offset: 78px;
   }
 
   .announcement {
@@ -1871,6 +1872,7 @@ a {
   .spotlight img {
     justify-self: center;
     width: min(72%, 260px);
+    height: 230px;
     max-height: 230px;
   }
 
