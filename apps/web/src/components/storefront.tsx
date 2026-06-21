@@ -59,7 +59,7 @@ function ProductImage({ product }: { product: Product }) {
   return <img src={product.image} alt="" loading="lazy" />;
 }
 
-const mobileAnchorGapPx = 10;
+const mobileAnchorGapPx = 0;
 
 export function Storefront({ commerceConfigured }: StorefrontProps) {
   const [cart, setCart] = useState<CartItem[]>([]);

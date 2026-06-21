@@ -1709,7 +1709,7 @@ a {
 
 @media (max-width: 640px) {
   :root {
-    --sticky-offset: 78px;
+    --sticky-offset: 68px;
   }
 
   .announcement {
