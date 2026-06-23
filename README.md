@@ -8,6 +8,14 @@ Cepa is a Next.js + TypeScript commerce MVP for a fast public storefront, Supaba
 - `supabase/migrations`: Postgres schema, RLS policies, seed data, and reservation functions.
 - `docs`: operational runbooks for plugins, Cloudflare, and deployment.
 
+## Current MVP State
+
+- Public storefront, cart, quiz, delivery checker, contact form, and admin routes are implemented.
+- The production domain is protected by the site access gate while Cepa is still private.
+- Checkout code is ready, but live/test payments stay paused until the Supabase and Stripe Vercel environment variables are added.
+- Admin users can review orders, update order status, review contact messages, update contact status, and mark products active or paused.
+- Security headers are centralized in `apps/web/src/lib/security-headers.ts` and applied site-wide through Next.js.
+
 ## Local Setup
 
 ```bash
@@ -23,6 +31,12 @@ Keep local settings in a private `.env.local` file and production settings in Ve
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `NEXT_PUBLIC_SITE_URL`
+
+Private preview/protection settings:
+
+- `SITE_ACCESS_ENABLED`
+- `SITE_ACCESS_USERNAME`
+- `SITE_ACCESS_PASSWORD`
 
 Public pages render without service env vars. Checkout, contact form, and admin intentionally return paused/configuration states until Supabase and Stripe are configured.
 
@@ -42,9 +56,18 @@ insert into public.admin_profiles (user_id, role)
 values ('<auth-user-uuid>', 'owner');
 ```
 
+Admin authorization is stored in `admin_profiles`; do not rely on user-editable Supabase user metadata for admin access.
+
 ## Stripe
 
 The app uses hosted Checkout Sessions for one-time payments. Product/price objects are not required for MVP checkout because the server creates Checkout line items from Supabase-validated order items.
+
+Checkout readiness notes:
+
+- `/api/checkout` reserves capacity in Supabase before creating a Stripe Checkout Session.
+- Stripe line items are created from the reserved order snapshot, not from client-side prices.
+- `/api/stripe/webhook` verifies signatures, stores event IDs, and handles duplicate events idempotently.
+- Webhook failures return errors so Stripe can retry.
 
 Configure the webhook endpoint:
 
