@@ -34,33 +34,47 @@ export async function POST(request: Request) {
     type: event.type,
     payload: event as unknown as Record<string, unknown>,
   });
+  const duplicateEvent = eventInsertError?.code === "23505";
 
-  if (eventInsertError?.code === "23505") {
-    return NextResponse.json({ received: true, duplicate: true });
+  if (eventInsertError && !duplicateEvent) {
+    return NextResponse.json({ error: "Could not store Stripe event." }, { status: 500 });
   }
 
-  if (eventInsertError) {
-    return NextResponse.json({ error: "Could not store Stripe event." }, { status: 500 });
+  if (!event.type.startsWith("checkout.session.")) {
+    return NextResponse.json({ received: true, duplicate: duplicateEvent });
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
   const orderId = session.metadata?.order_id;
 
-  if (orderId && event.type === "checkout.session.completed") {
-    await supabase.rpc("mark_order_paid", {
+  if (!orderId) {
+    return NextResponse.json({ received: true, duplicate: duplicateEvent });
+  }
+
+  const shouldMarkPaid =
+    event.type === "checkout.session.async_payment_succeeded" ||
+    (event.type === "checkout.session.completed" && session.payment_status === "paid");
+
+  if (shouldMarkPaid) {
+    const { error } = await supabase.rpc("mark_order_paid", {
       target_order_id: orderId,
       checkout_session_id: session.id,
     });
+
+    if (error) {
+      return NextResponse.json({ error: "Could not mark order paid." }, { status: 500 });
+    }
   }
 
-  if (
-    orderId &&
-    (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed")
-  ) {
-    await supabase.rpc("release_order_reservation", {
+  if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
+    const { error } = await supabase.rpc("release_order_reservation", {
       target_order_id: orderId,
     });
+
+    if (error) {
+      return NextResponse.json({ error: "Could not release order reservation." }, { status: 500 });
+    }
   }
 
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true, duplicate: duplicateEvent });
 }
