@@ -55,6 +55,7 @@ POST https://<domain>/api/stripe/webhook
 Listen for:
 
 - `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
 - `checkout.session.expired`
 - `checkout.session.async_payment_failed`
 

@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { orderStatusSchema } from "@/lib/schemas";
 import { requireAdmin } from "@/lib/admin";
+import { parseContactStatusUpdate, parseOrderStatusUpdate, parseProductStatusUpdate } from "@/lib/admin-mutations";
 import { createBrowserAwareSupabaseClient, createSupabaseServiceClient } from "@/lib/supabase/server";
 
 const signInSchema = z.object({
@@ -40,10 +40,10 @@ export async function updateOrderStatus(formData: FormData) {
   const service = createSupabaseServiceClient();
   if (!service) throw new Error("Supabase service client is not configured.");
 
-  const orderId = String(formData.get("orderId") ?? "");
-  const status = orderStatusSchema.parse(formData.get("status"));
+  const { orderId, status } = parseOrderStatusUpdate(formData);
+  const { error } = await service.from("orders").update({ status }).eq("id", orderId).select("id").single();
 
-  await service.from("orders").update({ status }).eq("id", orderId);
+  if (error) throw new Error(`Could not update order: ${error.message}`);
   revalidatePath("/admin");
 }
 
@@ -52,9 +52,26 @@ export async function updateContactStatus(formData: FormData) {
   const service = createSupabaseServiceClient();
   if (!service) throw new Error("Supabase service client is not configured.");
 
-  const messageId = String(formData.get("messageId") ?? "");
-  const status = z.enum(["new", "read", "archived"]).parse(formData.get("status"));
+  const { messageId, status } = parseContactStatusUpdate(formData);
+  const { error } = await service.from("contact_messages").update({ status }).eq("id", messageId).select("id").single();
 
-  await service.from("contact_messages").update({ status }).eq("id", messageId);
+  if (error) throw new Error(`Could not update contact message: ${error.message}`);
+  revalidatePath("/admin");
+}
+
+export async function updateProductStatus(formData: FormData) {
+  await requireAdmin();
+  const service = createSupabaseServiceClient();
+  if (!service) throw new Error("Supabase service client is not configured.");
+
+  const { productSlug, active } = parseProductStatusUpdate(formData);
+  const { error } = await service
+    .from("products")
+    .update({ active })
+    .eq("slug", productSlug)
+    .select("id")
+    .single();
+
+  if (error) throw new Error(`Could not update product: ${error.message}`);
   revalidatePath("/admin");
 }

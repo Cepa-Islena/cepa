@@ -3,7 +3,7 @@ import { getCurrentAdmin } from "@/lib/admin";
 import { isCommerceConfigured } from "@/lib/env";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/commerce";
-import { signOutAdmin, updateContactStatus, updateOrderStatus } from "@/app/admin/actions";
+import { signOutAdmin, updateContactStatus, updateOrderStatus, updateProductStatus } from "@/app/admin/actions";
 
 type OrderRow = {
   id: string;
@@ -25,6 +25,7 @@ type ProductRow = {
   name: string;
   kind: string;
   active: boolean;
+  size_label: string;
   price_cents: number;
 };
 
@@ -76,7 +77,7 @@ export default async function AdminPage() {
       .select("id,status,customer_email,delivery_pueblo,total_cents,stripe_checkout_session_id,created_at,order_items(product_name,quantity,total_amount_cents)")
       .order("created_at", { ascending: false })
       .limit(25),
-    service!.from("products").select("slug,name,kind,active,price_cents").order("sort_order", { ascending: true }),
+    service!.from("products").select("slug,name,kind,active,size_label,price_cents").order("sort_order", { ascending: true }),
     service!.from("contact_messages").select("id,name,email,topic,message,status,created_at").order("created_at", { ascending: false }).limit(25),
   ]);
 
@@ -138,9 +139,17 @@ export default async function AdminPage() {
         <div className="admin-grid">
           {(dbProducts as ProductRow[] | null)?.map((product) => (
             <article key={product.slug}>
-              <span>{product.kind}</span>
+              <span>{product.kind} · {product.active ? "active" : "paused"}</span>
               <h3>{product.name}</h3>
-              <p>{formatPrice(product.price_cents)} · {product.active ? "active" : "inactive"}</p>
+              <p>{formatPrice(product.price_cents)} · {product.size_label}</p>
+              <form action={updateProductStatus}>
+                <input type="hidden" name="productSlug" value={product.slug} />
+                <select name="active" defaultValue={String(product.active)}>
+                  <option value="true">Active</option>
+                  <option value="false">Paused</option>
+                </select>
+                <button type="submit">Save</button>
+              </form>
             </article>
           )) ?? <p>No products loaded.</p>}
         </div>

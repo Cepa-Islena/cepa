@@ -1337,8 +1337,17 @@ a {
   gap: 0.5rem;
 }
 
+.admin-grid form {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
 .admin-row select,
-.admin-row button {
+.admin-row button,
+.admin-grid select,
+.admin-grid button {
   min-height: 40px;
   border: 1px solid var(--borra);
   background: var(--pulpa);
@@ -1347,7 +1356,8 @@ a {
   font: inherit;
 }
 
-.admin-row button {
+.admin-row button,
+.admin-grid button {
   background: var(--borra);
   color: var(--pulpa);
   text-transform: uppercase;
