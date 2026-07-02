@@ -58,6 +58,17 @@ values ('<auth-user-uuid>', 'owner');
 
 Admin authorization is stored in `admin_profiles`; do not rely on user-editable Supabase user metadata for admin access.
 
+### Free Plan Keep-Alive
+
+Supabase Free projects can pause after low database activity over a 7-day period. This repo includes `.github/workflows/supabase-keep-alive.yml`, which reads one active product a few times per day through the Supabase REST API.
+
+Add these GitHub repository secrets before relying on the workflow:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+You can also run the workflow manually from GitHub Actions after adding the secrets to confirm the project receives database activity.
+
 ## Stripe
 
 The app uses hosted Checkout Sessions for one-time payments. Product/price objects are not required for MVP checkout because the server creates Checkout line items from Supabase-validated order items.

@@ -1,0 +1,27 @@
+name: Keep Supabase Active
+
+on:
+  schedule:
+    # Supabase Free projects can pause after low database activity over 7 days.
+    # These UTC times create lightweight database reads a few times per day.
+    - cron: "17 12,18,23 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read active products
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY repository secret."
+            exit 1
+          fi
+
+          curl --fail-with-body --silent --show-error --location \
+            "$SUPABASE_URL/rest/v1/products?select=slug&active=eq.true&limit=1" \
+            --header "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            --header "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY"
