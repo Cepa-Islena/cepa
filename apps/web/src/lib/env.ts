@@ -1,5 +1,3 @@
-import { headers } from "next/headers";
-
 export function getSupabasePublicEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -32,12 +30,22 @@ export function isCommerceConfigured() {
   return Boolean(getSupabaseServerEnv() && getStripeSecretKey());
 }
 
-export async function getRequestOrigin() {
-  const headerStore = await headers();
-  const forwardedHost = headerStore.get("x-forwarded-host");
-  const forwardedProto = headerStore.get("x-forwarded-proto") ?? "https";
-  const host = forwardedHost ?? headerStore.get("host");
+export function getConfiguredSiteOrigin() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-  if (host) return `${forwardedProto}://${host}`;
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  try {
+    const parsedUrl = new URL(siteUrl);
+
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+      throw new Error("Unsupported site URL protocol.");
+    }
+
+    return parsedUrl.origin;
+  } catch {
+    throw new Error("NEXT_PUBLIC_SITE_URL must be a valid absolute http or https URL.");
+  }
+}
+
+export async function getRequestOrigin() {
+  return getConfiguredSiteOrigin();
 }

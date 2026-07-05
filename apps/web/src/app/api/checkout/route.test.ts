@@ -26,6 +26,7 @@ type SupabaseMockOptions = {
   orderItems?: Record<string, unknown>[];
   orderItemsError?: { message: string } | null;
   orderUpdateError?: { message: string } | null;
+  rateLimitError?: { message: string } | null;
   reservation?: Record<string, unknown> | null;
   reservationError?: { message: string } | null;
   releaseError?: { message: string } | null;
@@ -62,6 +63,7 @@ function createSupabaseMock({
   ],
   orderItemsError = null,
   orderUpdateError = null,
+  rateLimitError = null,
   reservation = {
     order_id: "order_123",
     subtotal_cents: 1234,
@@ -71,12 +73,14 @@ function createSupabaseMock({
   reservationError = null,
   releaseError = null,
 }: SupabaseMockOptions = {}) {
+  const registerCheckoutAttempt = vi.fn().mockResolvedValue({ error: rateLimitError });
   const reserveSingle = vi.fn().mockResolvedValue({ data: reservation, error: reservationError });
   const orderItemsEq = vi.fn().mockResolvedValue({ data: orderItems, error: orderItemsError });
   const ordersEq = vi.fn().mockResolvedValue({ error: orderUpdateError });
   const orderItemsSelect = vi.fn(() => ({ eq: orderItemsEq }));
   const ordersUpdate = vi.fn(() => ({ eq: ordersEq }));
   const rpc = vi.fn((name: string) => {
+    if (name === "register_checkout_attempt") return registerCheckoutAttempt();
     if (name === "reserve_order") return { single: reserveSingle };
     return Promise.resolve({ error: releaseError });
   });
@@ -89,6 +93,7 @@ function createSupabaseMock({
   return {
     supabase: { rpc, from },
     rpc,
+    registerCheckoutAttempt,
     reserveSingle,
     orderItemsEq,
     ordersEq,
@@ -162,6 +167,9 @@ describe("checkout route", () => {
       subtotalCents: 1234,
       totalCents: 1734,
     });
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("register_checkout_attempt", {
+      rate_limit_key: expect.stringMatching(/^checkout:[a-f0-9]{64}$/),
+    });
     expect(supabaseMock.rpc).toHaveBeenCalledWith("reserve_order", {
       cart_items: [{ productSlug: "parcha-verde", quantity: 1 }],
       delivery_pueblo: "San Juan",
@@ -206,6 +214,24 @@ describe("checkout route", () => {
       stripe_checkout_session_id: "cs_test_123",
       total_cents: 1734,
     });
+  });
+
+  it("blocks checkout attempts before reserving inventory when the in-app rate limit is exceeded", async () => {
+    const supabaseMock = createSupabaseMock({
+      rateLimitError: { message: "Too many checkout attempts. Please wait and try again." },
+    });
+    const stripeMock = createStripeMock();
+    mocks.createSupabaseServiceClient.mockReturnValue(supabaseMock.supabase);
+    mocks.getStripeClient.mockReturnValue(stripeMock.stripe);
+
+    const response = await POST(checkoutRequest(validCheckoutBody()));
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body).toMatchObject({ error: "Too many checkout attempts. Please wait and try again." });
+    expect(supabaseMock.registerCheckoutAttempt).toHaveBeenCalled();
+    expect(supabaseMock.reserveSingle).not.toHaveBeenCalled();
+    expect(stripeMock.create).not.toHaveBeenCalled();
   });
 
   it("releases the reservation when reserved item totals do not match", async () => {

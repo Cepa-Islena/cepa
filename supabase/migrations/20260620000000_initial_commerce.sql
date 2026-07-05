@@ -108,6 +108,12 @@ create table public.stripe_events (
   received_at timestamptz not null default now()
 );
 
+create table public.checkout_attempts (
+  id uuid primary key default gen_random_uuid(),
+  rate_limit_key text not null check (char_length(rate_limit_key) between 16 and 96),
+  created_at timestamptz not null default now()
+);
+
 create index recipes_active_slug_idx on public.recipes (active, slug);
 create index products_active_kind_sort_idx on public.products (active, kind, sort_order);
 create index product_components_recipe_idx on public.product_components (recipe_id);
@@ -116,6 +122,7 @@ create index orders_stripe_session_idx on public.orders (stripe_checkout_session
 create index order_items_order_idx on public.order_items (order_id);
 create index contact_messages_status_created_idx on public.contact_messages (status, created_at desc);
 create index stripe_events_type_received_idx on public.stripe_events (type, received_at desc);
+create index checkout_attempts_key_created_idx on public.checkout_attempts (rate_limit_key, created_at desc);
 
 create or replace function private.set_updated_at()
 returns trigger
@@ -167,6 +174,7 @@ alter table public.order_items enable row level security;
 alter table public.admin_profiles enable row level security;
 alter table public.contact_messages enable row level security;
 alter table public.stripe_events enable row level security;
+alter table public.checkout_attempts enable row level security;
 
 grant select on public.products to anon, authenticated;
 grant select on public.delivery_zones to anon, authenticated;
@@ -268,6 +276,39 @@ on public.admin_profiles
 for select
 to authenticated
 using (private.is_admin() or user_id = auth.uid());
+
+create or replace function public.register_checkout_attempt(rate_limit_key text)
+returns integer
+language plpgsql
+set search_path = ''
+as $$
+declare
+  recent_attempts integer;
+begin
+  if rate_limit_key is null or char_length(rate_limit_key) < 16 or char_length(rate_limit_key) > 96 then
+    raise exception 'Invalid checkout rate limit key';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext(register_checkout_attempt.rate_limit_key)::bigint);
+
+  delete from public.checkout_attempts
+  where created_at < now() - interval '24 hours';
+
+  select count(*) into recent_attempts
+  from public.checkout_attempts attempts
+  where attempts.rate_limit_key = register_checkout_attempt.rate_limit_key
+    and attempts.created_at >= now() - interval '10 minutes';
+
+  if recent_attempts >= 8 then
+    raise exception 'Too many checkout attempts. Please wait and try again.';
+  end if;
+
+  insert into public.checkout_attempts (rate_limit_key)
+  values (register_checkout_attempt.rate_limit_key);
+
+  return recent_attempts + 1;
+end;
+$$;
 
 create or replace function public.reserve_order(
   cart_items jsonb,
@@ -421,16 +462,27 @@ language plpgsql
 set search_path = ''
 as $$
 declare
+  order_record public.orders%rowtype;
   item_record record;
   component jsonb;
 begin
+  update public.orders
+  set status = 'expired',
+    released_at = now()
+  where id = target_order_id
+    and status in ('reserved', 'checkout_created', 'failed', 'expired')
+    and paid_at is null
+    and released_at is null
+  returning * into order_record;
+
+  if not found then
+    return;
+  end if;
+
   for item_record in
     select oi.*
     from public.order_items oi
-    join public.orders o on o.id = oi.order_id
-    where oi.order_id = target_order_id
-      and o.status in ('reserved', 'checkout_created', 'failed', 'expired')
-      and o.released_at is null
+    where oi.order_id = order_record.id
   loop
     for component in select * from jsonb_array_elements(item_record.components)
     loop
@@ -439,13 +491,6 @@ begin
       where slug = component ->> 'recipeSlug';
     end loop;
   end loop;
-
-  update public.orders
-  set status = 'expired',
-    released_at = now()
-  where id = target_order_id
-    and status <> 'paid'
-    and released_at is null;
 end;
 $$;
 
@@ -455,16 +500,28 @@ language plpgsql
 set search_path = ''
 as $$
 declare
+  order_record public.orders%rowtype;
   item_record record;
   component jsonb;
 begin
+  update public.orders
+  set status = 'paid',
+    stripe_checkout_session_id = coalesce(public.orders.stripe_checkout_session_id, checkout_session_id),
+    paid_at = now()
+  where id = target_order_id
+    and status in ('reserved', 'checkout_created')
+    and paid_at is null
+    and released_at is null
+  returning * into order_record;
+
+  if not found then
+    return;
+  end if;
+
   for item_record in
     select oi.*
     from public.order_items oi
-    join public.orders o on o.id = oi.order_id
-    where oi.order_id = target_order_id
-      and o.status in ('reserved', 'checkout_created')
-      and o.paid_at is null
+    where oi.order_id = order_record.id
   loop
     for component in select * from jsonb_array_elements(item_record.components)
     loop
@@ -474,19 +531,14 @@ begin
       where slug = component ->> 'recipeSlug';
     end loop;
   end loop;
-
-  update public.orders
-  set status = 'paid',
-    stripe_checkout_session_id = coalesce(public.orders.stripe_checkout_session_id, checkout_session_id),
-    paid_at = now()
-  where id = target_order_id
-    and paid_at is null;
 end;
 $$;
 
+revoke all on function public.register_checkout_attempt(text) from public, anon, authenticated;
 revoke all on function public.reserve_order(jsonb, text, text) from public, anon, authenticated;
 revoke all on function public.release_order_reservation(uuid) from public, anon, authenticated;
 revoke all on function public.mark_order_paid(uuid, text) from public, anon, authenticated;
+grant execute on function public.register_checkout_attempt(text) to service_role;
 grant execute on function public.reserve_order(jsonb, text, text) to service_role;
 grant execute on function public.release_order_reservation(uuid) to service_role;
 grant execute on function public.mark_order_paid(uuid, text) to service_role;

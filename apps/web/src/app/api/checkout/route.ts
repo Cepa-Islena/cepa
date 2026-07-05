@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { findProduct } from "@/lib/catalog";
@@ -8,6 +9,8 @@ import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getStripeClient } from "@/lib/stripe";
 
 export const runtime = "nodejs";
+
+const CHECKOUT_RATE_LIMIT_ERROR = "Too many checkout attempts. Please wait and try again.";
 
 type ReservationResult = {
   order_id: string;
@@ -23,6 +26,31 @@ type ReservedOrderItem = {
   unit_amount_cents: number;
   total_amount_cents: number;
 };
+
+function firstForwardedValue(value: string | null) {
+  return value?.split(",")[0]?.trim() || null;
+}
+
+function getForwardedIp(request: Request) {
+  const cfConnectingIp = firstForwardedValue(request.headers.get("cf-connecting-ip"));
+  const realIp = firstForwardedValue(request.headers.get("x-real-ip"));
+  const forwardedFor = firstForwardedValue(request.headers.get("x-forwarded-for"));
+  const forwarded = request.headers.get("forwarded")?.match(/for="?([^;,"]+)/i)?.[1]?.trim() ?? null;
+
+  return cfConnectingIp ?? realIp ?? forwardedFor ?? forwarded ?? "unknown-ip";
+}
+
+function getCheckoutRateLimitKey(request: Request) {
+  const ip = getForwardedIp(request);
+  const userAgent = request.headers.get("user-agent")?.slice(0, 256) ?? "unknown-agent";
+  const digest = createHash("sha256").update(`${ip}|${userAgent}`).digest("hex");
+
+  return `checkout:${digest}`;
+}
+
+function isCheckoutRateLimitError(error: { message?: string } | null) {
+  return error?.message?.includes(CHECKOUT_RATE_LIMIT_ERROR) ?? false;
+}
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -45,6 +73,25 @@ export async function POST(request: Request) {
 
   if (!supabase || !stripe) {
     return NextResponse.json({ error: "Checkout is not configured." }, { status: 503 });
+  }
+
+  let origin: string;
+
+  try {
+    origin = await getRequestOrigin();
+  } catch {
+    return NextResponse.json({ error: "Checkout site URL is not configured." }, { status: 503 });
+  }
+
+  const { error: rateLimitError } = await supabase.rpc("register_checkout_attempt", {
+    rate_limit_key: getCheckoutRateLimitKey(request),
+  });
+
+  if (rateLimitError) {
+    const status = isCheckoutRateLimitError(rateLimitError) ? 429 : 503;
+    const message = status === 429 ? CHECKOUT_RATE_LIMIT_ERROR : "Checkout abuse protection is unavailable.";
+
+    return NextResponse.json({ error: message }, { status });
   }
 
   const { data: reservation, error: reservationError } = await supabase
@@ -78,7 +125,6 @@ export async function POST(request: Request) {
       throw new Error("Reserved order total does not match the locked order items.");
     }
 
-    const origin = await getRequestOrigin();
     const deliveryFeeCents = reservation.total_cents - reservation.subtotal_cents;
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = typedReservedItems.map((item) => {
       const product = findProduct(item.product_slug);
