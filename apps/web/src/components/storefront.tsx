@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import type { CSSProperties, FormEvent } from "react";
 import {
   ArrowRight,
   ChevronDown,
@@ -13,42 +13,17 @@ import {
   Truck,
   X,
 } from "lucide-react";
-import { addOns, catalog, metroPueblos, products, type CartItem, type Product, type ProductKind } from "@/lib/catalog";
-import {
-  bottleCount,
-  cartCount,
-  cartProducts,
-  cartTotalCents,
-  estimatedProduceLb,
-  formatPrice,
-  isMetroTown,
-  productMatchesSearch,
-  quizRecommendation,
-  remaining,
-  remainingForDeliveryCents,
-  type QuizAnswers,
-} from "@/lib/commerce";
-
-type CheckoutState =
-  | { status: "idle"; message: string }
-  | { status: "loading"; message: string }
-  | { status: "error"; message: string }
-  | { status: "ready"; message: string };
-
-type ContactState =
-  | { status: "idle"; message: string }
-  | { status: "loading"; message: string }
-  | { status: "success"; message: string }
-  | { status: "error"; message: string };
+import { useContactForm, type ContactState } from "@/hooks/use-contact-form";
+import { useDeliveryChecker } from "@/hooks/use-delivery-checker";
+import { useStorefrontCart } from "@/hooks/use-storefront-cart";
+import { useStorefrontCatalog } from "@/hooks/use-storefront-catalog";
+import { useStorefrontCheckout, type CheckoutState } from "@/hooks/use-storefront-checkout";
+import { useStorefrontNavigation } from "@/hooks/use-storefront-navigation";
+import { addOns, metroPueblos, products, type CartItem, type Product, type ProductKind } from "@/lib/catalog";
+import { formatPrice, remaining, type CartLine, type QuizAnswers } from "@/lib/commerce";
 
 type StorefrontProps = {
   commerceConfigured: boolean;
-};
-
-const defaultQuizAnswers: QuizAnswers = {
-  vibe: "refresh",
-  flavor: "tropical",
-  nutrient: "immune",
 };
 
 function cardStyle(variable: "--card-color" | "--spotlight-color", color: string): CSSProperties {
@@ -59,163 +34,38 @@ function ProductImage({ product }: { product: Product }) {
   return <img src={product.image} alt="" loading="lazy" />;
 }
 
-const sectionAnchorGapPx = 0;
-
 export function Storefront({ commerceConfigured }: StorefrontProps) {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [activeKind, setActiveKind] = useState<ProductKind | "all">("all");
-  const [selectedProduct, setSelectedProduct] = useState<Product>(products[5]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [deliveryTown, setDeliveryTown] = useState("San Juan");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [quizAnswers, setQuizAnswers] = useState<QuizAnswers>(defaultQuizAnswers);
-  const [checkoutState, setCheckoutState] = useState<CheckoutState>({
-    status: "idle",
-    message: commerceConfigured
-      ? "Stripe Checkout will open after server validation."
-      : "Checkout is paused until Supabase and Stripe env vars are configured.",
-  });
-  const [contactState, setContactState] = useState<ContactState>({
-    status: "idle",
-    message: "For events, delivery questions, and pueblos outside the first route.",
-  });
-
-  const visibleProducts = useMemo(() => {
-    const byKind = activeKind === "all" ? products : products.filter((product) => product.kind === activeKind);
-    return byKind.filter((product) => productMatchesSearch(product, searchQuery));
-  }, [activeKind, searchQuery]);
-
-  const lines = cartProducts(cart);
-  const total = cartTotalCents(cart);
-  const bottles = bottleCount(cart);
-  const produce = estimatedProduceLb(cart);
-  const metro = isMetroTown(deliveryTown);
-  const recommended = quizRecommendation(quizAnswers);
-  const currentDropRemaining = products.reduce((sum, product) => sum + remaining(product), 0);
-
-  function addToCart(productSlug: string) {
-    setCart((current) => {
-      const existing = current.find((item) => item.productSlug === productSlug);
-      if (existing) {
-        return current.map((item) =>
-          item.productSlug === productSlug ? { ...item, quantity: item.quantity + 1 } : item,
-        );
-      }
-      return [...current, { productSlug, quantity: 1 }];
-    });
-    setCartOpen(true);
-  }
-
-  function updateQuantity(productSlug: string, delta: number) {
-    setCart((current) =>
-      current
-        .map((item) => (item.productSlug === productSlug ? { ...item, quantity: Math.max(item.quantity + delta, 0) } : item))
-        .filter((item) => item.quantity > 0),
-    );
-  }
-
-  function selectProduct(productSlug: string) {
-    const product = products.find((candidate) => candidate.slug === productSlug);
-    if (!product) return;
-    setSelectedProduct(product);
-    setSearchQuery("");
-    document.querySelector("#la-cepa")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function scrollToSection(sectionId: string) {
-    setMobileNavOpen(false);
-
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        const target = document.getElementById(sectionId);
-        if (!target) return;
-
-        const headerHeight = document.querySelector<HTMLElement>(".site-header")?.getBoundingClientRect().height ?? 0;
-        const dropStats = document.querySelector<HTMLElement>(".drop-stats");
-        const dropStatsStyle = dropStats ? window.getComputedStyle(dropStats) : null;
-        const dropStatsTop = dropStatsStyle?.position === "sticky" ? Number.parseFloat(dropStatsStyle.top) || 0 : 0;
-        const dropStatsBottom =
-          dropStatsStyle?.position === "sticky" ? dropStatsTop + (dropStats?.getBoundingClientRect().height ?? 0) : 0;
-        const stickyStackHeight = Math.max(headerHeight, dropStatsBottom);
-        const scrollTop = target.getBoundingClientRect().top + window.scrollY - stickyStackHeight - sectionAnchorGapPx;
-
-        window.scrollTo({ top: Math.max(0, scrollTop), behavior: "smooth" });
-        window.history.replaceState(null, "", `#${sectionId}`);
-      });
-    });
-  }
-
-  useEffect(() => {
-    const sectionId = window.location.hash.slice(1);
-    if (!sectionId) return;
-
-    const timeout = window.setTimeout(() => scrollToSection(sectionId), 250);
-    return () => window.clearTimeout(timeout);
-  }, []);
-
-  async function checkout() {
-    if (!cart.length) return;
-
-    setCheckoutState({ status: "loading", message: "Validating cart and reserving capacity..." });
-
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cartItems: cart,
-          deliveryPueblo: deliveryTown,
-          customerEmail,
-        }),
-      });
-      const payload = (await response.json()) as { url?: string; error?: string };
-
-      if (!response.ok || !payload.url) {
-        throw new Error(payload.error ?? "Checkout is unavailable right now.");
-      }
-
-      setCheckoutState({ status: "ready", message: "Reserved. Opening Stripe Checkout..." });
-      window.location.href = payload.url;
-    } catch (error) {
-      setCheckoutState({
-        status: "error",
-        message: error instanceof Error ? error.message : "Checkout is unavailable right now.",
-      });
-    }
-  }
-
-  async function submitContact(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-
-    setContactState({ status: "loading", message: "Sending..." });
-
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: String(formData.get("name") ?? ""),
-          email: String(formData.get("email") ?? ""),
-          topic: String(formData.get("topic") ?? "general"),
-          message: String(formData.get("message") ?? ""),
-        }),
-      });
-      const payload = (await response.json()) as { error?: string };
-
-      if (!response.ok) throw new Error(payload.error ?? "Message could not be sent.");
-
-      event.currentTarget.reset();
-      setContactState({ status: "success", message: "Message received. We will follow up soon." });
-    } catch (error) {
-      setContactState({
-        status: "error",
-        message: error instanceof Error ? error.message : "Message could not be sent.",
-      });
-    }
-  }
+  const {
+    cart,
+    cartOpen,
+    lines,
+    total,
+    bottles,
+    produce,
+    itemCount,
+    remainingForDelivery,
+    openCart,
+    closeCart,
+    addToCart,
+    updateQuantity,
+  } = useStorefrontCart();
+  const { mobileNavOpen, closeMobileNav, toggleMobileNav, scrollToSection } = useStorefrontNavigation();
+  const {
+    activeKind,
+    setActiveKind,
+    selectedProduct,
+    searchQuery,
+    setSearchQuery,
+    quizAnswers,
+    setQuizAnswers,
+    visibleProducts,
+    recommended,
+    currentDropRemaining,
+    selectProduct,
+  } = useStorefrontCatalog();
+  const { deliveryTown, setDeliveryTown, metro } = useDeliveryChecker();
+  const { customerEmail, setCustomerEmail, checkoutState, checkout } = useStorefrontCheckout(commerceConfigured);
+  const { contactState, submitContact } = useContactForm();
 
   return (
     <div className="site-shell">
@@ -232,7 +82,7 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
           type="button"
           aria-label="Open menu"
           aria-expanded={mobileNavOpen}
-          onClick={() => setMobileNavOpen((open) => !open)}
+          onClick={toggleMobileNav}
         >
           <Menu size={22} />
         </button>
@@ -240,13 +90,13 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
           <img src="/brand/logo-borra.png" alt="Cepa Isleña" />
         </a>
         <DesktopNav selectProduct={selectProduct} scrollToSection={scrollToSection} />
-        <button className="cart-button" type="button" onClick={() => setCartOpen(true)}>
-          <ShoppingBag size={19} /> Cart <span>{cartCount(cart)}</span>
+        <button className="cart-button" type="button" onClick={openCart}>
+          <ShoppingBag size={19} /> Cart <span>{itemCount}</span>
         </button>
       </header>
 
       {mobileNavOpen ? (
-        <MobileNav selectProduct={selectProduct} close={() => setMobileNavOpen(false)} scrollToSection={scrollToSection} />
+        <MobileNav selectProduct={selectProduct} close={closeMobileNav} scrollToSection={scrollToSection} />
       ) : null}
 
       <section className="drop-stats" aria-label="Live drop stats">
@@ -417,15 +267,15 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
         lines={lines}
         total={total}
         bottles={bottles}
-        remainingForDelivery={remainingForDeliveryCents(cart)}
+        remainingForDelivery={remainingForDelivery}
         customerEmail={customerEmail}
         setCustomerEmail={setCustomerEmail}
         checkoutState={checkoutState}
         commerceConfigured={commerceConfigured}
-        close={() => setCartOpen(false)}
+        close={closeCart}
         addToCart={addToCart}
         updateQuantity={updateQuantity}
-        checkout={checkout}
+        checkout={() => checkout({ cart, deliveryTown })}
       />
     </div>
   );
@@ -906,7 +756,7 @@ function CartDrawer({
 }: {
   cartOpen: boolean;
   cart: CartItem[];
-  lines: ReturnType<typeof cartProducts>;
+  lines: CartLine[];
   total: number;
   bottles: number;
   remainingForDelivery: number;
