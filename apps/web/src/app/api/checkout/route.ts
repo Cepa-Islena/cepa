@@ -2,9 +2,10 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { findProduct } from "@/lib/catalog";
-import { getRequestOrigin, isCommerceConfigured } from "@/lib/env";
+import { isCommerceConfigured } from "@/lib/env";
 import { isMetroTown } from "@/lib/commerce";
 import { checkoutRequestSchema } from "@/lib/schemas";
+import { assertSameOrigin, getForwardedIp } from "@/lib/request-guards";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getStripeClient } from "@/lib/stripe";
 
@@ -27,19 +28,6 @@ type ReservedOrderItem = {
   total_amount_cents: number;
 };
 
-function firstForwardedValue(value: string | null) {
-  return value?.split(",")[0]?.trim() || null;
-}
-
-function getForwardedIp(request: Request) {
-  const cfConnectingIp = firstForwardedValue(request.headers.get("cf-connecting-ip"));
-  const realIp = firstForwardedValue(request.headers.get("x-real-ip"));
-  const forwardedFor = firstForwardedValue(request.headers.get("x-forwarded-for"));
-  const forwarded = request.headers.get("forwarded")?.match(/for="?([^;,"]+)/i)?.[1]?.trim() ?? null;
-
-  return cfConnectingIp ?? realIp ?? forwardedFor ?? forwarded ?? "unknown-ip";
-}
-
 function getCheckoutRateLimitKey(request: Request) {
   const ip = getForwardedIp(request);
   const userAgent = request.headers.get("user-agent")?.slice(0, 256) ?? "unknown-agent";
@@ -53,6 +41,15 @@ function isCheckoutRateLimitError(error: { message?: string } | null) {
 }
 
 export async function POST(request: Request) {
+  try {
+    assertSameOrigin(request);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Invalid request origin." },
+      { status: 403 },
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = checkoutRequestSchema.safeParse(body);
 
@@ -78,7 +75,7 @@ export async function POST(request: Request) {
   let origin: string;
 
   try {
-    origin = await getRequestOrigin();
+    origin = assertSameOrigin(request);
   } catch {
     return NextResponse.json({ error: "Checkout site URL is not configured." }, { status: 503 });
   }
@@ -94,11 +91,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status });
   }
 
+  const giftNoteFromCart = parsed.data.cartItems.find((item) => item.productSlug === "delivery-note")?.note;
+  const giftNote = (parsed.data.giftNote || giftNoteFromCart || "").trim();
+
   const { data: reservation, error: reservationError } = await supabase
     .rpc("reserve_order", {
-      cart_items: parsed.data.cartItems,
+      cart_items: parsed.data.cartItems.map(({ productSlug, quantity }) => ({ productSlug, quantity })),
       delivery_pueblo: parsed.data.deliveryPueblo,
       customer_email: parsed.data.customerEmail || null,
+      customer_name: parsed.data.customerName,
+      customer_phone: parsed.data.customerPhone,
+      delivery_address: parsed.data.deliveryAddress,
+      delivery_notes: parsed.data.deliveryNotes || null,
+      gift_note: giftNote || null,
     })
     .single<ReservationResult>();
 
@@ -172,6 +177,8 @@ export async function POST(request: Request) {
       metadata: {
         order_id: reservation.order_id,
         delivery_pueblo: parsed.data.deliveryPueblo,
+        customer_name: parsed.data.customerName,
+        customer_phone: parsed.data.customerPhone,
       },
       line_items: lineItems,
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,

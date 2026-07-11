@@ -9,6 +9,9 @@ type OrderRow = {
   id: string;
   status: string;
   customer_email: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  delivery_address: string | null;
   delivery_pueblo: string | null;
   total_cents: number;
   stripe_checkout_session_id: string | null;
@@ -74,7 +77,9 @@ export default async function AdminPage() {
   const [{ data: orders }, { data: dbProducts }, { data: messages }] = await Promise.all([
     service!
       .from("orders")
-      .select("id,status,customer_email,delivery_pueblo,total_cents,stripe_checkout_session_id,created_at,order_items(product_name,quantity,total_amount_cents)")
+      .select(
+        "id,status,customer_email,customer_name,customer_phone,delivery_address,delivery_pueblo,total_cents,stripe_checkout_session_id,created_at,order_items(product_name,quantity,total_amount_cents)",
+      )
       .order("created_at", { ascending: false })
       .limit(25),
     service!.from("products").select("slug,name,kind,active,size_label,price_cents").order("sort_order", { ascending: true }),
@@ -86,7 +91,9 @@ export default async function AdminPage() {
       <header className="admin-header">
         <div>
           <img src="/brand/logo-borra.png" alt="Cepa Isleña" />
-          <p>{admin.email} · {admin.role}</p>
+          <p>
+            {admin.email} · {admin.role}
+          </p>
         </div>
         <form action={signOutAdmin}>
           <button className="button secondary" type="submit">
@@ -100,13 +107,24 @@ export default async function AdminPage() {
           <p>Orders</p>
           <h1>Drop operations</h1>
         </div>
+        <p className="admin-help">
+          Paid status is set only by Stripe webhooks. Admin can cancel/expire unpaid reservations (releases capacity) or mark paid
+          orders fulfilled.
+        </p>
         <div className="admin-table">
           {(orders as OrderRow[] | null)?.map((order) => (
             <article key={order.id} className="admin-row">
               <div>
                 <strong>{formatPrice(order.total_cents)}</strong>
                 <span>{new Date(order.created_at).toLocaleString()}</span>
-                <span>{order.customer_email ?? "No email"} · {order.delivery_pueblo ?? "No pueblo"}</span>
+                <span>
+                  {order.customer_name ?? "No name"} · {order.customer_phone ?? "No phone"}
+                </span>
+                <span>
+                  {order.customer_email ?? "No email"} · {order.delivery_pueblo ?? "No pueblo"}
+                </span>
+                <span>{order.delivery_address ?? "No address"}</span>
+                <span>Status: {order.status}</span>
               </div>
               <ul>
                 {order.order_items.map((item) => (
@@ -117,8 +135,8 @@ export default async function AdminPage() {
               </ul>
               <form action={updateOrderStatus}>
                 <input type="hidden" name="orderId" value={order.id} />
-                <select name="status" defaultValue={order.status}>
-                  {["reserved", "checkout_created", "paid", "cancelled", "expired", "failed", "fulfilled"].map((status) => (
+                <select name="status" defaultValue={order.status === "paid" ? "fulfilled" : order.status}>
+                  {["cancelled", "failed", "expired", "fulfilled"].map((status) => (
                     <option key={status} value={status}>
                       {status}
                     </option>
@@ -139,9 +157,13 @@ export default async function AdminPage() {
         <div className="admin-grid">
           {(dbProducts as ProductRow[] | null)?.map((product) => (
             <article key={product.slug}>
-              <span>{product.kind} · {product.active ? "active" : "paused"}</span>
+              <span>
+                {product.kind} · {product.active ? "active" : "paused"}
+              </span>
               <h3>{product.name}</h3>
-              <p>{formatPrice(product.price_cents)} · {product.size_label}</p>
+              <p>
+                {formatPrice(product.price_cents)} · {product.size_label}
+              </p>
               <form action={updateProductStatus}>
                 <input type="hidden" name="productSlug" value={product.slug} />
                 <select name="active" defaultValue={String(product.active)}>
@@ -165,7 +187,9 @@ export default async function AdminPage() {
             <article key={message.id} className="admin-row">
               <div>
                 <strong>{message.name}</strong>
-                <span>{message.email} · {message.topic}</span>
+                <span>
+                  {message.email} · {message.topic}
+                </span>
                 <span>{new Date(message.created_at).toLocaleString()}</span>
               </div>
               <p>{message.message}</p>

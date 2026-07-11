@@ -6,15 +6,17 @@ Cepa is a Next.js + TypeScript commerce MVP for a fast public storefront, Supaba
 
 - `apps/web`: Next.js App Router storefront and admin.
 - `supabase/migrations`: Postgres schema, RLS policies, seed data, and reservation functions.
-- `docs`: operational runbooks for plugins, Cloudflare, and deployment.
+- `docs`: operational runbooks for plugins, Cloudflare, launch hardening, and deployment.
 
 ## Current MVP State
 
-- Public storefront, cart, quiz, delivery checker, contact form, and admin routes are implemented.
-- The production domain is protected by the site access gate while Cepa is still private.
+- Public storefront, cart, quiz, delivery checker, contact form, legal pages, and admin routes are implemented.
+- The production domain can be protected by the site access gate while Cepa is still private.
 - Checkout code is ready, but live/test payments stay paused until the Supabase and Stripe Vercel environment variables are added.
-- Admin users can review orders, update order status, review contact messages, update contact status, and mark products active or paused.
+- Checkout collects delivery name/phone/address. There is no order minimum, so single-item test purchases work.
+- Admin users can review orders, apply inventory-safe status updates, review contact messages, update contact status, and mark products active or paused.
 - Security headers are centralized in `apps/web/src/lib/security-headers.ts` and applied site-wide through Next.js.
+- Contact and checkout POSTs use same-origin checks and database-backed rate limits (after migrations).
 
 ## Local Setup
 
@@ -42,12 +44,14 @@ Public pages render without service env vars. Checkout, contact form, and admin 
 
 ## Supabase
 
-Apply `supabase/migrations/20260620000000_initial_commerce.sql` to a Supabase project. The migration:
+Apply migrations in `supabase/migrations/` in timestamp order. The initial commerce migration:
 
 - Creates products, recipes, bundles, orders, order items, delivery zones, admin profiles, contact messages, and Stripe event tables.
 - Enables RLS on all public tables.
 - Grants public Data API access only for active products, active delivery zones, and contact inserts.
 - Adds transactional reservation, release, and paid-order functions used by server routes.
+
+Later migrations harden rate limits, inventory claim order, delivery fields, contact throttles, and admin status helpers.
 
 Create the first admin after the user signs in through Supabase Auth:
 
@@ -57,6 +61,12 @@ values ('<auth-user-uuid>', 'owner');
 ```
 
 Admin authorization is stored in `admin_profiles`; do not rely on user-editable Supabase user metadata for admin access.
+
+Optional cleanup helper for expired unpaid reservations:
+
+```sql
+select public.expire_stale_reservations();
+```
 
 ### Free Plan Keep-Alive
 
@@ -79,6 +89,7 @@ Checkout readiness notes:
 - Stripe line items are created from the reserved order snapshot, not from client-side prices.
 - `/api/stripe/webhook` verifies signatures, stores event IDs, and handles duplicate events idempotently.
 - Webhook failures return errors so Stripe can retry.
+- Paid status is set by webhooks only. Admin can cancel/expire unpaid reservations or mark paid orders fulfilled.
 
 Configure the webhook endpoint:
 
@@ -110,6 +121,15 @@ Use Vercel environment variables rather than committed secrets. Scope preview de
 docker build -t cepa-web .
 docker run --env-file .env.local -p 3000:3000 cepa-web
 ```
+
+## Legal Pages
+
+- `/privacy`
+- `/terms`
+- `/refunds`
+- `/delivery`
+
+These are storefront policies written for MVP use. Have a lawyer review before heavy public ads or high volume sales.
 
 ## Checks
 

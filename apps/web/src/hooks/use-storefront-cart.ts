@@ -8,7 +8,6 @@ import {
   cartProducts,
   cartTotalCents,
   estimatedProduceLb,
-  remainingForDeliveryCents,
 } from "@/lib/commerce";
 
 export function useStorefrontCart() {
@@ -20,7 +19,6 @@ export function useStorefrontCart() {
   const bottles = bottleCount(cart);
   const produce = estimatedProduceLb(cart);
   const itemCount = cartCount(cart);
-  const remainingForDelivery = remainingForDeliveryCents(cart);
 
   const openCart = useCallback(() => setCartOpen(true), []);
   const closeCart = useCallback(() => setCartOpen(false), []);
@@ -54,7 +52,6 @@ export function useStorefrontCart() {
     bottles,
     produce,
     itemCount,
-    remainingForDelivery,
     openCart,
     closeCart,
     addToCart,

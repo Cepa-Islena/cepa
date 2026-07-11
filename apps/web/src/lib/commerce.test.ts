@@ -53,7 +53,7 @@ describe("commerce helpers", () => {
       quizRecommendation({
         vibe: "try-all",
         flavor: "tropical",
-        nutrient: "immune",
+        nutrient: "daily-reset",
       }).slug,
     ).toBe("mvp-sample-bundle");
     expect(
@@ -63,6 +63,13 @@ describe("commerce helpers", () => {
         nutrient: "hydration",
       }).slug,
     ).toBe("tamarindo-root");
+    expect(
+      quizRecommendation({
+        vibe: "refresh",
+        flavor: "tropical",
+        nutrient: "daily-reset",
+      }).slug,
+    ).toBe("jengibre-shot");
   });
 
   it("rejects static carts beyond displayed capacity", () => {

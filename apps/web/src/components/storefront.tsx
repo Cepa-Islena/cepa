@@ -19,11 +19,14 @@ import { useStorefrontCart } from "@/hooks/use-storefront-cart";
 import { useStorefrontCatalog } from "@/hooks/use-storefront-catalog";
 import { useStorefrontCheckout, type CheckoutState } from "@/hooks/use-storefront-checkout";
 import { useStorefrontNavigation } from "@/hooks/use-storefront-navigation";
-import { addOns, metroPueblos, products, type CartItem, type Product, type ProductKind } from "@/lib/catalog";
+import { ScrollFruitField } from "@/components/scroll-fruit-field";
+import { addOns, metroPueblos, products, products as staticProducts, type CartItem, type Product, type ProductKind } from "@/lib/catalog";
 import { formatPrice, remaining, type CartLine, type QuizAnswers } from "@/lib/commerce";
 
 type StorefrontProps = {
   commerceConfigured: boolean;
+  catalogProducts?: Product[];
+  catalogSource?: "supabase" | "static";
 };
 
 function cardStyle(variable: "--card-color" | "--spotlight-color", color: string): CSSProperties {
@@ -34,7 +37,11 @@ function ProductImage({ product }: { product: Product }) {
   return <img src={product.image} alt="" loading="lazy" />;
 }
 
-export function Storefront({ commerceConfigured }: StorefrontProps) {
+export function Storefront({
+  commerceConfigured,
+  catalogProducts = staticProducts,
+  catalogSource = "static",
+}: StorefrontProps) {
   const {
     cart,
     cartOpen,
@@ -43,7 +50,6 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
     bottles,
     produce,
     itemCount,
-    remainingForDelivery,
     openCart,
     closeCart,
     addToCart,
@@ -62,18 +68,34 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
     recommended,
     currentDropRemaining,
     selectProduct,
-  } = useStorefrontCatalog();
+  } = useStorefrontCatalog(catalogProducts);
   const { deliveryTown, setDeliveryTown, metro } = useDeliveryChecker();
-  const { customerEmail, setCustomerEmail, checkoutState, checkout } = useStorefrontCheckout(commerceConfigured);
+  const {
+    customerEmail,
+    setCustomerEmail,
+    customerName,
+    setCustomerName,
+    customerPhone,
+    setCustomerPhone,
+    deliveryAddress,
+    setDeliveryAddress,
+    deliveryNotes,
+    setDeliveryNotes,
+    giftNote,
+    setGiftNote,
+    checkoutState,
+    checkout,
+  } = useStorefrontCheckout(commerceConfigured);
   const { contactState, submitContact } = useContactForm();
 
   return (
     <div className="site-shell">
+      <ScrollFruitField />
       <div className="announcement">
-        <span>Delivery en SJ, PR</span>
-        <span>Sin preservativos</span>
+        <span>Delivery en SJ metro</span>
         <span>Sin azúcar añadida</span>
         <span>Cold pressed</span>
+        <span>Made to order drops</span>
       </div>
 
       <header className="site-header">
@@ -127,8 +149,8 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
             <img className="hero-logo" src="/brand/logo-borra.png" alt="Cepa Isleña" />
             <h1>Jugos verdes y shots, made fresh by drop.</h1>
             <p>
-              100% natural, sin preservativos, sin azúcar añadida. Cold pressed en SJ, PR para cuidar el cuerpo, la isla
-              y el corillo.
+              100% natural juices and shots, cold pressed in SJ, PR for the corillo. Fresh flavor first — not medical
+              advice, just good juice.
             </p>
             <div className="hero-actions">
               <a className="button primary" href="#products">
@@ -141,6 +163,38 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
           </div>
           <div className="hero-panel" aria-label="Cepa product artwork">
             <img src="/brand/corillo-street.png" alt="" />
+          </div>
+        </section>
+
+        <section className="editorial-band" aria-label="Brand statement">
+          <span>Pleasure to be sipped by you</span>
+          <p>
+            Begin your afternoon with Cepa — bright island flavors, cold pressed by drop, and a corillo of fruit
+            characters that show up as you scroll.
+          </p>
+        </section>
+
+        <section className="serve-strip" aria-label="How to enjoy Cepa">
+          <div>
+            <p>Signature serve</p>
+            <h2>Shake well. Sip cold. Share the bag.</h2>
+            <div className="serve-steps">
+              <article>
+                <strong>1</strong>
+                <span>Pick your juice, shot, or sample bundle.</span>
+              </article>
+              <article>
+                <strong>2</strong>
+                <span>We press the drop for metro San Juan.</span>
+              </article>
+              <article>
+                <strong>3</strong>
+                <span>Refrigerate on arrival and shake before every sip.</span>
+              </article>
+            </div>
+          </div>
+          <div className="serve-visual">
+            <img src="/brand/corillo-pulpa-scene.png" alt="Cepa juice scene" />
           </div>
         </section>
 
@@ -176,7 +230,7 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
                   id="product-search"
                   type="search"
                   value={searchQuery}
-                  placeholder="ginger, immune, bundle..."
+                  placeholder="ginger, bundle, parcha..."
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
               </label>
@@ -260,16 +314,25 @@ export function Storefront({ commerceConfigured }: StorefrontProps) {
         <ContactSection contactState={contactState} submitContact={submitContact} />
       </main>
 
-      <Footer />
+      <Footer catalogSource={catalogSource} />
       <CartDrawer
         cartOpen={cartOpen}
         cart={cart}
         lines={lines}
         total={total}
         bottles={bottles}
-        remainingForDelivery={remainingForDelivery}
         customerEmail={customerEmail}
         setCustomerEmail={setCustomerEmail}
+        customerName={customerName}
+        setCustomerName={setCustomerName}
+        customerPhone={customerPhone}
+        setCustomerPhone={setCustomerPhone}
+        deliveryAddress={deliveryAddress}
+        setDeliveryAddress={setDeliveryAddress}
+        deliveryNotes={deliveryNotes}
+        setDeliveryNotes={setDeliveryNotes}
+        giftNote={giftNote}
+        setGiftNote={setGiftNote}
         checkoutState={checkoutState}
         commerceConfigured={commerceConfigured}
         close={closeCart}
@@ -399,13 +462,13 @@ function ProductCard({
         <span>{formatPrice(product.priceCents)}</span>
       </div>
       <p className="product-short">{product.short}</p>
-      <div className="capacity" aria-label={`${available} available`}>
+      <div className="capacity" aria-label={`${available} available in current drop display`}>
         <div>
-          <span>{available} left</span>
-          <span>{product.capacity} cap</span>
+          <span>{available} left in drop</span>
+          <span>limited</span>
         </div>
         <span>
-          <i style={{ width: `${percentage}%` }} />
+          <i style={{ width: `${Math.max(8, 100 - percentage)}%` }} />
         </span>
       </div>
       <div className="product-tags">
@@ -428,6 +491,20 @@ function Spotlight({ product, addToCart }: { product: Product; addToCart: (produ
         <h2>{product.name}</h2>
         <span>{product.size}</span>
         <p>{product.description}</p>
+        {product.ingredients.length ? (
+          <p className="ingredient-line">
+            <strong>Ingredients:</strong> {product.ingredients.join(", ")}
+          </p>
+        ) : null}
+        {product.allergens.length ? (
+          <p className="ingredient-line">
+            <strong>Allergens:</strong> {product.allergens.join(", ")}
+          </p>
+        ) : (
+          <p className="ingredient-line">
+            <strong>Allergens:</strong> none listed for this MVP recipe — ask if you have concerns.
+          </p>
+        )}
         <div className="spotlight-tags">
           {product.tags.map((tag) => (
             <span key={tag}>{tag}</span>
@@ -452,8 +529,8 @@ function AboutSection() {
       <div className="about-grid">
         <article>
           <span>Mission</span>
-          <h3>Nutrir con intención.</h3>
-          <p>Ofrecemos jugos verdes y shots 100% naturales, hechos con ingredientes de origen agroecológico.</p>
+          <h3>Jugo con intención.</h3>
+          <p>Ofrecemos jugos verdes y shots 100% naturales, cold pressed en drops pequeños con sabor local.</p>
         </article>
         <article>
           <span>Vision</span>
@@ -614,12 +691,12 @@ function QuizSection({
         </div>
         <div className="quiz-step">
           <span>3</span>
-          <h3>Nutrient focus?</h3>
+          <h3>What vibe do you want?</h3>
           <div className="quiz-options">
             {optionButton({
-              selected: answers.nutrient === "immune",
-              label: "Immune",
-              onClick: () => setAnswers({ ...answers, nutrient: "immune" }),
+              selected: answers.nutrient === "daily-reset",
+              label: "Daily reset",
+              onClick: () => setAnswers({ ...answers, nutrient: "daily-reset" }),
             })}
             {optionButton({
               selected: answers.nutrient === "hydration",
@@ -653,8 +730,9 @@ function TestimonialsSection() {
   return (
     <section className="testimonials-section" id="testimonials">
       <div className="section-heading stacked">
-        <p>Testimonials by product</p>
+        <p>Early feedback</p>
         <h2>Lo que dice el corillo.</h2>
+        <p className="legal-note">Sample quotes for brand direction. Replace with real customer reviews before public launch ads.</p>
       </div>
       <div className="testimonial-grid">
         {products.slice(0, 6).map((product) => (
@@ -716,12 +794,15 @@ function ContactSection({
   );
 }
 
-function Footer() {
+function Footer({ catalogSource }: { catalogSource: "supabase" | "static" }) {
   return (
     <footer className="footer">
       <div>
         <img src="/brand/logo-borra.png" alt="Cepa Isleña" />
         <p>Jugos verdes y shots hechos con frutas, manos y mucha intención.</p>
+        <p className="legal-note">
+          Not medical advice. Ingredient lists describe current MVP recipes and may change. Catalog source: {catalogSource}.
+        </p>
       </div>
       <nav aria-label="Footer navigation">
         <a href="#shop">Home</a>
@@ -729,6 +810,12 @@ function Footer() {
         <a href="#products">Order</a>
         <a href="#quiz">Quiz</a>
         <a href="#contact">Contact</a>
+      </nav>
+      <nav aria-label="Legal">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/refunds">Refunds</a>
+        <a href="/delivery">Delivery</a>
       </nav>
       <div>
         <span>Instagram</span>
@@ -744,9 +831,18 @@ function CartDrawer({
   lines,
   total,
   bottles,
-  remainingForDelivery,
   customerEmail,
   setCustomerEmail,
+  customerName,
+  setCustomerName,
+  customerPhone,
+  setCustomerPhone,
+  deliveryAddress,
+  setDeliveryAddress,
+  deliveryNotes,
+  setDeliveryNotes,
+  giftNote,
+  setGiftNote,
   checkoutState,
   commerceConfigured,
   close,
@@ -759,9 +855,18 @@ function CartDrawer({
   lines: CartLine[];
   total: number;
   bottles: number;
-  remainingForDelivery: number;
   customerEmail: string;
   setCustomerEmail: (value: string) => void;
+  customerName: string;
+  setCustomerName: (value: string) => void;
+  customerPhone: string;
+  setCustomerPhone: (value: string) => void;
+  deliveryAddress: string;
+  setDeliveryAddress: (value: string) => void;
+  deliveryNotes: string;
+  setDeliveryNotes: (value: string) => void;
+  giftNote: string;
+  setGiftNote: (value: string) => void;
   checkoutState: CheckoutState;
   commerceConfigured: boolean;
   close: () => void;
@@ -799,13 +904,9 @@ function CartDrawer({
         ) : (
           <>
             <div className="cart-progress">
-              <span>
-                {remainingForDelivery > 0
-                  ? `Add ${formatPrice(remainingForDelivery)} more for delivery priority`
-                  : "Delivery priority unlocked"}
-              </span>
+              <span>Metro delivery · no order minimum</span>
               <div>
-                <i style={{ width: `${Math.min(100, (total / 4500) * 100)}%` }} />
+                <i style={{ width: "100%" }} />
               </div>
             </div>
             <div className="cart-items">
@@ -852,6 +953,55 @@ function CartDrawer({
             </div>
             <div className="cart-footer">
               <label className="drawer-email">
+                <span>Name</span>
+                <input
+                  type="text"
+                  value={customerName}
+                  placeholder="Your name"
+                  required
+                  onChange={(event) => setCustomerName(event.target.value)}
+                />
+              </label>
+              <label className="drawer-email">
+                <span>Phone</span>
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  placeholder="787..."
+                  required
+                  onChange={(event) => setCustomerPhone(event.target.value)}
+                />
+              </label>
+              <label className="drawer-email">
+                <span>Delivery address</span>
+                <input
+                  type="text"
+                  value={deliveryAddress}
+                  placeholder="Street, unit, pueblo area"
+                  required
+                  onChange={(event) => setDeliveryAddress(event.target.value)}
+                />
+              </label>
+              <label className="drawer-email">
+                <span>Delivery notes (optional)</span>
+                <input
+                  type="text"
+                  value={deliveryNotes}
+                  placeholder="Gate code, floor, timing notes"
+                  onChange={(event) => setDeliveryNotes(event.target.value)}
+                />
+              </label>
+              <label className="drawer-email">
+                <span>Gift note (optional)</span>
+                <input
+                  type="text"
+                  value={giftNote}
+                  maxLength={280}
+                  placeholder="Un carinito for the bag"
+                  onChange={(event) => setGiftNote(event.target.value)}
+                />
+              </label>
+              <label className="drawer-email">
                 <span>Email for receipt</span>
                 <input
                   type="email"
@@ -875,6 +1025,10 @@ function CartDrawer({
                 {checkoutState.status === "loading" ? "Reserving..." : "Check out"}
               </button>
               <p className={`checkout-status ${checkoutState.status}`}>{checkoutState.message}</p>
+              <p className="legal-note">
+                By checking out you agree to our <a href="/terms">Terms</a>, <a href="/privacy">Privacy</a>, and{" "}
+                <a href="/delivery">Delivery</a> policies.
+              </p>
             </div>
           </>
         )}

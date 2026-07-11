@@ -18,9 +18,13 @@ export type Product = {
   description: string;
   tags: string[];
   nutrients: string[];
+  ingredients: string[];
+  allergens: string[];
   taste?: string;
   testimonial?: string;
+  /** Display capacity for the current drop UI. Checkout still locks real stock in Supabase. */
   capacity: number;
+  /** Keep 0 in static catalog so pre-launch UI does not invent sold counts. */
   sold: number;
   components: ProductComponent[];
 };
@@ -28,6 +32,7 @@ export type Product = {
 export type CartItem = {
   productSlug: string;
   quantity: number;
+  note?: string;
 };
 
 export const products: Product[] = [
@@ -41,12 +46,14 @@ export const products: Product[] = [
     color: "#CACD3A",
     short: "Bright parcha, greens, and a little island sun.",
     description: "A made-to-order green juice with parcha energy and a clean finish.",
-    tags: ["cold pressed", "100% natural", "100 bottles"],
-    nutrients: ["greens", "hydration", "vitamin C"],
+    tags: ["cold pressed", "100% natural", "limited drop"],
+    nutrients: ["greens", "hydration", "bright taste"],
+    ingredients: ["passion fruit (parcha)", "leafy greens", "cucumber", "lime", "filtered water"],
+    allergens: [],
     taste: "tropical, bright, lightly tart",
     testimonial: "This one tastes like a morning walk in Santurce.",
     capacity: 100,
-    sold: 28,
+    sold: 0,
     components: [{ recipeSlug: "parcha-verde", recipeName: "Parcha Verde", ounces: 16 }],
   },
   {
@@ -59,12 +66,14 @@ export const products: Product[] = [
     color: "#FFBBD7",
     short: "Acerola, citrus, and that fresh morning kick.",
     description: "Tart, juicy, and made for the days that need a little glow.",
-    tags: ["vitamin C", "sin azúcar añadida", "100 bottles"],
-    nutrients: ["vitamin C", "antioxidants", "glow"],
+    tags: ["acerola", "sin azúcar añadida", "limited drop"],
+    nutrients: ["tart citrus", "morning kick", "glow"],
+    ingredients: ["acerola", "citrus", "filtered water"],
+    allergens: [],
     taste: "tart, citrusy, juicy",
     testimonial: "Acerola Glow is my weekly reset. Acidito and fresh.",
     capacity: 100,
-    sold: 43,
+    sold: 0,
     components: [{ recipeSlug: "acerola-glow", recipeName: "Acerola Glow", ounces: 16 }],
   },
   {
@@ -77,12 +86,14 @@ export const products: Product[] = [
     color: "#9BB9FF",
     short: "Pina, mint, and a beach-day kind of fresh.",
     description: "A cooling juice for hot days, made fresh by drop.",
-    tags: ["refreshing", "shake well", "100 bottles"],
-    nutrients: ["refresh", "digestion", "cooling"],
+    tags: ["refreshing", "shake well", "limited drop"],
+    nutrients: ["refresh", "mint", "cooling"],
+    ingredients: ["pineapple", "mint", "filtered water"],
+    allergens: [],
     taste: "sweet, minty, cooling",
     testimonial: "The one I want after the beach. Super fresh.",
     capacity: 100,
-    sold: 18,
+    sold: 0,
     components: [{ recipeSlug: "pina-menta", recipeName: "Pina Menta", ounces: 16 }],
   },
   {
@@ -95,12 +106,14 @@ export const products: Product[] = [
     color: "#CDA680",
     short: "Tamarindo, roots, and deep island flavor.",
     description: "Earthy, bright, and not trying to taste like everybody else.",
-    tags: ["made to order", "local flavor", "100 bottles"],
-    nutrients: ["roots", "minerals", "energy"],
+    tags: ["made to order", "local flavor", "limited drop"],
+    nutrients: ["roots", "deep flavor", "earthy"],
+    ingredients: ["tamarind", "root vegetables", "filtered water"],
+    allergens: [],
     taste: "earthy, tangy, deep",
     testimonial: "Not basic at all. Tamarindo Root has personality.",
     capacity: 100,
-    sold: 11,
+    sold: 0,
     components: [{ recipeSlug: "tamarindo-root", recipeName: "Tamarindo Root", ounces: 16 }],
   },
   {
@@ -112,13 +125,15 @@ export const products: Product[] = [
     image: "/brand/product-jengibre.png",
     color: "#F4F2E9",
     short: "Pica sabrosito. Ginger, citrus, and no drama.",
-    description: "A small but serious shot for your daily reset.",
-    tags: ["immune shot", "250 shots", "cold pressed"],
-    nutrients: ["immune", "ginger", "kick"],
+    description: "A small but serious ginger-citrus shot for your daily reset.",
+    tags: ["ginger shot", "limited drop", "cold pressed"],
+    nutrients: ["ginger", "citrus", "kick"],
+    ingredients: ["ginger", "citrus", "filtered water"],
+    allergens: [],
     taste: "spicy, citrusy, direct",
     testimonial: "Pica sabrosito, pero in the best way.",
     capacity: 250,
-    sold: 94,
+    sold: 0,
     components: [{ recipeSlug: "jengibre-shot", recipeName: "Jengibre Shot", ounces: 2 }],
   },
   {
@@ -133,10 +148,12 @@ export const products: Product[] = [
     description: "One cart item, every MVP flavor. Perfect para probar el corillo completo.",
     tags: ["one SKU", "4 oz samples", "best for first timers"],
     nutrients: ["discovery", "variety", "starter pack"],
+    ingredients: ["sample set of current juice and shot flavors"],
+    allergens: [],
     taste: "all MVP flavors",
     testimonial: "Perfect when you do not know your favorite yet.",
     capacity: 52,
-    sold: 17,
+    sold: 0,
     components: [
       { recipeSlug: "parcha-verde", recipeName: "Parcha Verde", ounces: 4 },
       { recipeSlug: "acerola-glow", recipeName: "Acerola Glow", ounces: 4 },
@@ -160,6 +177,8 @@ export const addOns: Product[] = [
     description: "For gifting, thanking, or sending un carinito.",
     tags: ["add-on"],
     nutrients: [],
+    ingredients: [],
+    allergens: [],
     capacity: 999,
     sold: 0,
     components: [],
@@ -176,6 +195,8 @@ export const addOns: Product[] = [
     description: "An easy add-on for pickup or delivery.",
     tags: ["add-on"],
     nutrients: [],
+    ingredients: [],
+    allergens: [],
     capacity: 999,
     sold: 0,
     components: [],
@@ -183,8 +204,6 @@ export const addOns: Product[] = [
 ];
 
 export const catalog = [...products, ...addOns];
-
-export const deliveryThresholdCents = 4500;
 
 export const metroPueblos = ["San Juan", "Guaynabo", "Bayamon", "Carolina", "Trujillo Alto", "Catano"];
 

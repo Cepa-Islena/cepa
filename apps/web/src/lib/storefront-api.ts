@@ -4,6 +4,11 @@ export type CheckoutSessionInput = {
   cartItems: CartItem[];
   deliveryPueblo: string;
   customerEmail: string;
+  customerName: string;
+  customerPhone: string;
+  deliveryAddress: string;
+  deliveryNotes?: string;
+  giftNote?: string;
 };
 
 export type ContactMessageInput = {

@@ -2,7 +2,6 @@ import {
   type CartItem,
   type Product,
   catalog,
-  deliveryThresholdCents,
   findProduct,
   metroPueblos,
   products,
@@ -15,7 +14,7 @@ export type CartLine = CartItem & {
 export type QuizAnswers = {
   vibe: "refresh" | "cool" | "try-all";
   flavor: "tropical" | "citrus" | "earthy";
-  nutrient: "immune" | "hydration" | "energy";
+  nutrient: "daily-reset" | "hydration" | "energy";
 };
 
 export function formatPrice(cents: number) {
@@ -45,10 +44,6 @@ export function cartCount(cart: CartItem[]) {
 
 export function cartTotalCents(cart: CartItem[]) {
   return cartProducts(cart).reduce((sum, item) => sum + item.product.priceCents * item.quantity, 0);
-}
-
-export function remainingForDeliveryCents(cart: CartItem[]) {
-  return Math.max(deliveryThresholdCents - cartTotalCents(cart), 0);
 }
 
 export function bottleCount(cart: CartItem[]) {
@@ -81,6 +76,8 @@ export function productMatchesSearch(product: (typeof catalog)[number], searchQu
     product.taste,
     ...product.tags,
     ...product.nutrients,
+    ...product.ingredients,
+    ...product.allergens,
   ]
     .filter(Boolean)
     .join(" ")
@@ -93,7 +90,7 @@ export function quizRecommendation(answers: QuizAnswers): Product {
 
   if (answers.vibe === "try-all") return products.find((product) => product.slug === "mvp-sample-bundle") ?? fallback;
   if (answers.flavor === "earthy") return products.find((product) => product.slug === "tamarindo-root") ?? fallback;
-  if (answers.nutrient === "immune") return products.find((product) => product.slug === "jengibre-shot") ?? fallback;
+  if (answers.nutrient === "daily-reset") return products.find((product) => product.slug === "jengibre-shot") ?? fallback;
   if (answers.flavor === "citrus") return products.find((product) => product.slug === "acerola-glow") ?? fallback;
   if (answers.vibe === "cool") return products.find((product) => product.slug === "pina-menta") ?? fallback;
   return products.find((product) => product.slug === "parcha-verde") ?? fallback;
@@ -131,4 +128,9 @@ export function checkoutLineItems(cart: CartItem[]) {
     quantity: item.quantity,
     unitAmountCents: item.product.priceCents,
   }));
+}
+
+export function extractGiftNote(cart: CartItem[]) {
+  const noteItem = cart.find((item) => item.productSlug === "delivery-note" && item.note?.trim());
+  return noteItem?.note?.trim() ?? "";
 }

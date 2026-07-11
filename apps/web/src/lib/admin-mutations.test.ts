@@ -15,11 +15,13 @@ describe("admin mutation parsers", () => {
     });
   });
 
-  it("rejects invalid order statuses", () => {
+  it("rejects invalid and non-admin-editable order statuses", () => {
     const formData = new FormData();
     formData.set("orderId", id);
     formData.set("status", "refunded");
+    expect(() => parseOrderStatusUpdate(formData)).toThrow();
 
+    formData.set("status", "paid");
     expect(() => parseOrderStatusUpdate(formData)).toThrow();
   });
 

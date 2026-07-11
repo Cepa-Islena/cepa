@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { orderStatusSchema } from "@/lib/schemas";
+import { adminEditableOrderStatusSchema } from "@/lib/schemas";
 
 export const contactStatusSchema = z.enum(["new", "read", "archived"]);
 
 export const orderStatusUpdateSchema = z.object({
   orderId: z.uuid(),
-  status: orderStatusSchema,
+  status: adminEditableOrderStatusSchema,
 });
 
 export const contactStatusUpdateSchema = z.object({

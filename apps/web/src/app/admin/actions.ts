@@ -41,7 +41,10 @@ export async function updateOrderStatus(formData: FormData) {
   if (!service) throw new Error("Supabase service client is not configured.");
 
   const { orderId, status } = parseOrderStatusUpdate(formData);
-  const { error } = await service.from("orders").update({ status }).eq("id", orderId).select("id").single();
+  const { error } = await service.rpc("admin_set_order_status", {
+    target_order_id: orderId,
+    new_status: status,
+  });
 
   if (error) throw new Error(`Could not update order: ${error.message}`);
   revalidatePath("/admin");

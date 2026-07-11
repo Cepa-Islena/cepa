@@ -603,10 +603,10 @@ on conflict do nothing;
 
 insert into public.delivery_zones (pueblo, active, delivery_fee_cents, min_order_cents, notes)
 values
-  ('San Juan', true, 0, 4500, 'First delivery zone'),
-  ('Guaynabo', true, 0, 4500, 'First delivery zone'),
-  ('Bayamon', true, 0, 4500, 'First delivery zone'),
-  ('Carolina', true, 0, 4500, 'First delivery zone'),
-  ('Trujillo Alto', true, 0, 4500, 'First delivery zone'),
-  ('Catano', true, 0, 4500, 'First delivery zone')
+  ('San Juan', true, 0, 0, 'First delivery zone'),
+  ('Guaynabo', true, 0, 0, 'First delivery zone'),
+  ('Bayamon', true, 0, 0, 'First delivery zone'),
+  ('Carolina', true, 0, 0, 'First delivery zone'),
+  ('Trujillo Alto', true, 0, 0, 'First delivery zone'),
+  ('Catano', true, 0, 0, 'First delivery zone')
 on conflict (pueblo) do nothing;

@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getRequestOrigin: vi.fn(),
+  getConfiguredSiteOrigin: vi.fn(),
   isCommerceConfigured: vi.fn(),
   createSupabaseServiceClient: vi.fn(),
   getStripeClient: vi.fn(),
 }));
 
 vi.mock("@/lib/env", () => ({
-  getRequestOrigin: mocks.getRequestOrigin,
+  getConfiguredSiteOrigin: mocks.getConfiguredSiteOrigin,
+  getRequestOrigin: mocks.getConfiguredSiteOrigin,
   isCommerceConfigured: mocks.isCommerceConfigured,
 }));
 
@@ -38,6 +39,7 @@ function checkoutRequest(body: Record<string, unknown>) {
     body: JSON.stringify(body),
     headers: {
       "content-type": "application/json",
+      origin: "https://cepaislena.com",
     },
   });
 }
@@ -47,6 +49,11 @@ function validCheckoutBody(overrides: Record<string, unknown> = {}) {
     cartItems: [{ productSlug: "parcha-verde", quantity: 1 }],
     deliveryPueblo: "San Juan",
     customerEmail: "cliente@example.com",
+    customerName: "Cliente Cepa",
+    customerPhone: "7875550100",
+    deliveryAddress: "123 Calle Test, San Juan",
+    deliveryNotes: "Call on arrival",
+    giftNote: "Para el corillo",
     ...overrides,
   };
 }
@@ -57,8 +64,8 @@ function createSupabaseMock({
       product_slug: "parcha-verde",
       product_name: "Locked Parcha",
       quantity: 1,
-      unit_amount_cents: 1234,
-      total_amount_cents: 1234,
+      unit_amount_cents: 900,
+      total_amount_cents: 900,
     },
   ],
   orderItemsError = null,
@@ -66,8 +73,8 @@ function createSupabaseMock({
   rateLimitError = null,
   reservation = {
     order_id: "order_123",
-    subtotal_cents: 1234,
-    total_cents: 1734,
+    subtotal_cents: 900,
+    total_cents: 900,
     reservation_expires_at: "2026-06-23T12:00:00Z",
   },
   reservationError = null,
@@ -126,7 +133,7 @@ function createStripeMock() {
 describe("checkout route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getRequestOrigin.mockResolvedValue("https://cepaislena.com");
+    mocks.getConfiguredSiteOrigin.mockReturnValue("https://cepaislena.com");
     mocks.isCommerceConfigured.mockReturnValue(true);
   });
 
@@ -164,8 +171,8 @@ describe("checkout route", () => {
     expect(body).toMatchObject({
       url: "https://checkout.stripe.test/cs_test_123",
       orderId: "order_123",
-      subtotalCents: 1234,
-      totalCents: 1734,
+      subtotalCents: 900,
+      totalCents: 900,
     });
     expect(supabaseMock.rpc).toHaveBeenCalledWith("register_checkout_attempt", {
       rate_limit_key: expect.stringMatching(/^checkout:[a-f0-9]{64}$/),
@@ -174,6 +181,11 @@ describe("checkout route", () => {
       cart_items: [{ productSlug: "parcha-verde", quantity: 1 }],
       delivery_pueblo: "San Juan",
       customer_email: "cliente@example.com",
+      customer_name: "Cliente Cepa",
+      customer_phone: "7875550100",
+      delivery_address: "123 Calle Test, San Juan",
+      delivery_notes: "Call on arrival",
+      gift_note: "Para el corillo",
     });
     expect(supabaseMock.orderItemsEq).toHaveBeenCalledWith("order_id", "order_123");
     expect(checkoutPayload).toMatchObject({
@@ -183,14 +195,16 @@ describe("checkout route", () => {
       metadata: {
         order_id: "order_123",
         delivery_pueblo: "San Juan",
+        customer_name: "Cliente Cepa",
+        customer_phone: "7875550100",
       },
     });
-    expect(checkoutPayload.line_items).toHaveLength(2);
+    expect(checkoutPayload.line_items).toHaveLength(1);
     expect(checkoutPayload.line_items[0]).toMatchObject({
       quantity: 1,
       price_data: {
         currency: "usd",
-        unit_amount: 1234,
+        unit_amount: 900,
         product_data: {
           name: "Locked Parcha",
           metadata: {
@@ -199,20 +213,10 @@ describe("checkout route", () => {
         },
       },
     });
-    expect(checkoutPayload.line_items[1]).toMatchObject({
-      quantity: 1,
-      price_data: {
-        currency: "usd",
-        unit_amount: 500,
-        product_data: {
-          name: "Metro delivery",
-        },
-      },
-    });
     expect(supabaseMock.ordersUpdate).toHaveBeenCalledWith({
       status: "checkout_created",
       stripe_checkout_session_id: "cs_test_123",
-      total_cents: 1734,
+      total_cents: 900,
     });
   });
 
@@ -238,8 +242,8 @@ describe("checkout route", () => {
     const supabaseMock = createSupabaseMock({
       reservation: {
         order_id: "order_123",
-        subtotal_cents: 1234,
-        total_cents: 1234,
+        subtotal_cents: 900,
+        total_cents: 900,
         reservation_expires_at: "2026-06-23T12:00:00Z",
       },
       orderItems: [
@@ -248,7 +252,7 @@ describe("checkout route", () => {
           product_name: "Locked Parcha",
           quantity: 1,
           unit_amount_cents: 900,
-          total_amount_cents: 900,
+          total_amount_cents: 500,
         },
       ],
     });
