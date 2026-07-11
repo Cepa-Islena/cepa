@@ -25,8 +25,8 @@ export function useStorefrontCheckout(commerceConfigured: boolean) {
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({
     status: "idle",
     message: commerceConfigured
-      ? "Stripe Checkout opens after server validation and inventory reservation."
-      : "Checkout is paused until Supabase and Stripe env vars are configured.",
+      ? "Ready when you are — pay securely with Stripe."
+      : "Checkout is almost ready. Payments go live after the final Stripe + Supabase connect.",
   });
 
   const checkout = useCallback(

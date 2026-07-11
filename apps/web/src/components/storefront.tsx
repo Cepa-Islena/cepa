@@ -89,25 +89,15 @@ export function Storefront({
   const { contactState, submitContact } = useContactForm();
 
   return (
-    <div className="site-shell">
+    <div className="site-shell calm-store">
       <ScrollFruitField />
-      {!commerceConfigured ? (
-        <div className="config-banner" role="status">
-          <strong>Checkout is paused on this deploy.</strong>
-          <span>
-            Vercel is missing Supabase + Stripe env vars. Add them in Vercel → Project → Settings → Environment
-            Variables, then redeploy. See docs/domain-go-live.md.
-          </span>
-        </div>
-      ) : null}
-      <div className="announcement">
+      <div className="announcement slim">
         <span>Delivery en SJ metro</span>
+        <span>Cold pressed by drop</span>
         <span>Sin azúcar añadida</span>
-        <span>Cold pressed</span>
-        <span>Made to order drops</span>
       </div>
 
-      <header className="site-header">
+      <header className="site-header calm-header">
         <button
           className="icon-button mobile-menu"
           type="button"
@@ -130,44 +120,27 @@ export function Storefront({
         <MobileNav selectProduct={selectProduct} close={closeMobileNav} scrollToSection={scrollToSection} />
       ) : null}
 
-      <section className="drop-stats" aria-label="Live drop stats">
-        <div>
-          <span>Local produce in this cart</span>
-          <strong>{produce} lb</strong>
-        </div>
-        <div>
-          <span>Bottles reserved</span>
-          <strong>{bottles}</strong>
-        </div>
-        <a className="middle-buy" href="#products">
-          Order now
-        </a>
-        <div>
-          <span>Delivery area</span>
-          <strong>{metro ? "Metro ready" : "Working on it"}</strong>
-        </div>
-        <div>
-          <span>Current drop</span>
-          <strong>{currentDropRemaining} left</strong>
-        </div>
-      </section>
-
       <main>
-        <section className="shop-hero" id="shop">
+        <section className="shop-hero calm-hero" id="shop">
           <div className="hero-copy">
-            <img className="hero-logo" src="/brand/logo-borra.png" alt="Cepa Isleña" />
-            <h1>Jugos verdes y shots, made fresh by drop.</h1>
+            <p className="eyebrow">SJ, PR · jugos verdes y shots</p>
+            <h1>Juice that makes the afternoon feel better.</h1>
             <p>
-              100% natural juices and shots, cold pressed in SJ, PR for the corillo. Fresh flavor first — not medical
-              advice, just good juice.
+              Bright island flavors, cold pressed for metro San Juan. Not medical advice — just something your body and
+              your corillo will look forward to.
             </p>
             <div className="hero-actions">
               <a className="button primary" href="#products">
-                Shop all products <ArrowRight size={18} />
+                Shop this drop <ArrowRight size={18} />
               </a>
               <button className="button secondary" type="button" onClick={() => addToCart("mvp-sample-bundle")}>
-                Add sample bundle
+                Start with the sample pack
               </button>
+            </div>
+            <div className="hero-proof">
+              <span>100% natural</span>
+              <span>Made to order</span>
+              <span>Metro delivery</span>
             </div>
           </div>
           <div className="hero-panel" aria-label="Cepa product artwork">
@@ -175,96 +148,51 @@ export function Storefront({
           </div>
         </section>
 
-        <section className="editorial-band" aria-label="Brand statement">
-          <span>Pleasure to be sipped by you</span>
-          <p>
-            Begin your afternoon with Cepa — bright island flavors, cold pressed by drop, and a corillo of fruit
-            characters that show up as you scroll.
-          </p>
+        <section className="ritual-strip" aria-label="How Cepa works">
+          <article>
+            <strong>01</strong>
+            <h3>Pick once</h3>
+            <p>Choose a juice, a shot, or the sample pack.</p>
+          </article>
+          <article>
+            <strong>02</strong>
+            <h3>We press the drop</h3>
+            <p>Small batches for metro San Juan — fresh, not endless stock.</p>
+          </article>
+          <article>
+            <strong>03</strong>
+            <h3>Make it a ritual</h3>
+            <p>Shake well, sip cold, come back for the next drop.</p>
+          </article>
         </section>
 
-        <section className="serve-strip" aria-label="How to enjoy Cepa">
-          <div>
-            <p>Signature serve</p>
-            <h2>Shake well. Sip cold. Share the bag.</h2>
-            <div className="serve-steps">
-              <article>
-                <strong>1</strong>
-                <span>Pick your juice, shot, or sample bundle.</span>
-              </article>
-              <article>
-                <strong>2</strong>
-                <span>We press the drop for metro San Juan.</span>
-              </article>
-              <article>
-                <strong>3</strong>
-                <span>Refrigerate on arrival and shake before every sip.</span>
-              </article>
-            </div>
-          </div>
-          <div className="serve-visual">
-            <img src="/brand/corillo-pulpa-scene.png" alt="Cepa juice scene" />
-          </div>
-        </section>
-
-        <section className="info-strip" aria-label="Cepa product promises">
-          <div>
-            <Leaf size={20} />
-            <span>100% natural</span>
-          </div>
-          <div>
-            <Sprout size={20} />
-            <span>Ingredientes con intención</span>
-          </div>
-          <div>
-            <Truck size={20} />
-            <span>Delivery por drop local</span>
-          </div>
-          <div>
-            <span className="stamp">Shake well</span>
-            <span>La separación es natural</span>
-          </div>
-        </section>
-
-        <section className="shop-section" id="products">
-          <div className="section-heading">
+        <section className="shop-section calm-shop" id="products">
+          <div className="section-heading calm-heading">
             <div>
-              <p>All Products</p>
-              <h2>Shop the Cepa drop</h2>
+              <p>This drop</p>
+              <h2>Shop the flavors people reorder.</h2>
             </div>
-            <div className="shop-tools">
-              <label className="search-box" htmlFor="product-search">
-                <span>Search</span>
-                <input
-                  id="product-search"
-                  type="search"
-                  value={searchQuery}
-                  placeholder="ginger, bundle, parcha..."
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                />
-              </label>
-              <div className="filters" aria-label="Product filters">
-                {[
-                  ["all", "All"],
-                  ["juice", "Juices"],
-                  ["shot", "Shots"],
-                  ["bundle", "Bundles"],
-                ].map(([kind, label]) => (
-                  <button
-                    key={kind}
-                    className={activeKind === kind ? "active" : ""}
-                    type="button"
-                    onClick={() => setActiveKind(kind as ProductKind | "all")}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+            <div className="filters" aria-label="Product filters">
+              {[
+                ["all", "All"],
+                ["juice", "Juices"],
+                ["shot", "Shots"],
+                ["bundle", "Bundle"],
+              ].map(([kind, label]) => (
+                <button
+                  key={kind}
+                  className={activeKind === kind ? "active" : ""}
+                  type="button"
+                  onClick={() => setActiveKind(kind as ProductKind | "all")}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
           {visibleProducts.length ? (
-            <div className="product-grid">
+            <div className="product-grid calm-grid">
               {visibleProducts.map((product) => (
                 <ProductCard key={product.slug} product={product} addToCart={addToCart} selectProduct={selectProduct} />
               ))}
@@ -272,20 +200,20 @@ export function Storefront({
           ) : (
             <div className="no-results">
               <h3>No products found</h3>
-              <p>Try searching by flavor, nutrient, or product type.</p>
+              <p>Try juices, shots, or the sample pack.</p>
             </div>
           )}
         </section>
 
-        <section className="bundle-feature" id="bundles">
+        <section className="bundle-feature calm-bundle" id="bundles">
           <div className="bundle-art">
             <img src="/brand/corillo-logo-scene.png" alt="Cepa Corillo illustration" />
           </div>
           <div className="bundle-copy">
-            <p>One SKU, all MVP flavors</p>
+            <p>Best first buy</p>
             <h2>MVP Sample Bundle</h2>
-            <span className="price-lockup">$22 / 5 x 4 oz bottles</span>
-            <p>Like a sampler pack: the cart sees one bundle, but the backend reserves one pour from each recipe.</p>
+            <span className="price-lockup">$22 · 5 flavors</span>
+            <p>The easiest way to fall in love with Cepa. One pack, every launch flavor.</p>
             <ul>
               {products[5].components.map((component) => (
                 <li key={component.recipeSlug}>
@@ -295,31 +223,28 @@ export function Storefront({
               ))}
             </ul>
             <button className="button primary wide" type="button" onClick={() => addToCart("mvp-sample-bundle")}>
-              Add bundle to cart
+              Add sample pack
             </button>
           </div>
         </section>
 
-        <section className="detail-section" id="la-cepa">
-          <Spotlight product={selectedProduct} addToCart={addToCart} />
-          <div className="story-card">
+        <section className="story-band" id="about">
+          <div className="story-band-inner">
             <p>La Cepa</p>
             <h2>Aquí nadie crece solo.</h2>
             <p>
-              Cepa nace de pausar el ritmo: apoyar agricultura local, consumir con intención y hacer que cuidarnos se
-              sienta cercano, real y de aquí.
+              Local fruit, small drops, and a brand that feels like Puerto Rico — intentional, playful, and hard to
+              forget after the first bottle.
             </p>
-            <a href="#products">
-              Back to shop <ArrowRight size={18} />
-            </a>
+            <div className="story-points">
+              <span>100% natural</span>
+              <span>Cold pressed by drop</span>
+              <span>Metro San Juan</span>
+            </div>
           </div>
         </section>
 
-        <AboutSection />
-        <SubscriptionSection addToCart={addToCart} />
         <DeliverySection deliveryTown={deliveryTown} setDeliveryTown={setDeliveryTown} metro={metro} />
-        <QuizSection answers={quizAnswers} setAnswers={setQuizAnswers} recommendation={recommended} addToCart={addToCart} />
-        <TestimonialsSection />
         <ContactSection contactState={contactState} submitContact={submitContact} />
       </main>
 
@@ -363,10 +288,10 @@ function DesktopNav({
   return (
     <nav className="nav-links" aria-label="Main navigation">
       {[
-        ["shop", "Home"],
-        ["about", "About Us"],
-        ["products", "Order"],
-        ["contact", "Contact Us"],
+        ["products", "Shop"],
+        ["about", "Story"],
+        ["delivery", "Delivery"],
+        ["contact", "Contact"],
       ].map(([id, label]) => (
         <a
           href={`#${id}`}
@@ -379,7 +304,6 @@ function DesktopNav({
           {label}
         </a>
       ))}
-      <ShopDropdown selectProduct={selectProduct} />
     </nav>
   );
 }
@@ -455,11 +379,8 @@ function ProductCard({
   addToCart: (productSlug: string) => void;
   selectProduct: (productSlug: string) => void;
 }) {
-  const available = remaining(product);
-  const percentage = Math.min(100, Math.round((product.sold / product.capacity) * 100));
-
   return (
-    <article className="product-card" style={cardStyle("--card-color", product.color)}>
+    <article className="product-card calm-card" style={cardStyle("--card-color", product.color)}>
       <button className="product-image" type="button" onClick={() => selectProduct(product.slug)}>
         <ProductImage product={product} />
       </button>
@@ -471,15 +392,6 @@ function ProductCard({
         <span>{formatPrice(product.priceCents)}</span>
       </div>
       <p className="product-short">{product.short}</p>
-      <div className="capacity" aria-label={`${available} available in current drop display`}>
-        <div>
-          <span>{available} left in drop</span>
-          <span>limited</span>
-        </div>
-        <span>
-          <i style={{ width: `${Math.max(8, 100 - percentage)}%` }} />
-        </span>
-      </div>
       <div className="product-tags">
         {product.tags.slice(0, 2).map((tag) => (
           <span key={tag}>{tag}</span>
@@ -912,11 +824,8 @@ function CartDrawer({
           </div>
         ) : (
           <>
-            <div className="cart-progress">
-              <span>Metro delivery · no order minimum</span>
-              <div>
-                <i style={{ width: "100%" }} />
-              </div>
+            <div className="cart-progress calm-cart-note">
+              <span>Metro San Juan delivery · no minimum</span>
             </div>
             <div className="cart-items">
               {lines.map(({ product, quantity }) => (
