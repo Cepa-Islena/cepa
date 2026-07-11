@@ -137,22 +137,51 @@ body:has(.cepa-store) {
   color: var(--pulpa);
 }
 
-/* Hero — wine + cream, not mustard */
+/* Hero — full-bleed video (Botivo rhythm, Cepa palette) */
 .cepa-store .shop-hero {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  min-height: min(86vh, 820px);
+  grid-template-columns: 1fr;
+  min-height: min(88vh, 860px);
   border: 0;
   border-bottom: 1px solid var(--line);
   background: var(--borra);
   color: var(--pulpa);
+  overflow: hidden;
+}
+
+.cepa-store .hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.cepa-store .hero-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(1.05) contrast(1.04);
+}
+
+.cepa-store .hero-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(61, 11, 27, 0.88) 0%, rgba(61, 11, 27, 0.55) 48%, rgba(61, 11, 27, 0.28) 100%),
+    linear-gradient(0deg, rgba(61, 11, 27, 0.55) 0%, transparent 45%);
+  pointer-events: none;
 }
 
 .cepa-store .hero-copy {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   gap: 1rem;
+  max-width: 42rem;
+  min-height: min(88vh, 860px);
   padding: clamp(2.5rem, 7vw, 5.5rem);
 }
 
@@ -166,7 +195,7 @@ body:has(.cepa-store) {
 
 .cepa-store .hero-copy h1 {
   margin: 0;
-  max-width: 11ch;
+  max-width: 12ch;
   font-family: "New Spirit Cepa", Georgia, serif;
   font-weight: 400;
   font-size: clamp(2.8rem, 6.5vw, 5rem);
@@ -178,7 +207,7 @@ body:has(.cepa-store) {
 .cepa-store .hero-copy > p {
   margin: 0;
   max-width: 32rem;
-  color: rgba(244, 242, 233, 0.8);
+  color: rgba(244, 242, 233, 0.84);
   font-size: 1.05rem;
   line-height: 1.55;
 }
@@ -233,19 +262,11 @@ body:has(.cepa-store) {
   color: rgba(244, 242, 233, 0.72);
 }
 
+/* legacy panel hide if present */
 .cepa-store .hero-panel {
-  min-height: 100%;
-  overflow: hidden;
-  border: 0;
-  background: var(--remolacha);
+  display: none;
 }
 
-.cepa-store .hero-panel img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.95;
-}
 
 /* Flavor strip */
 .cepa-store .flavor-row {
@@ -728,22 +749,27 @@ body:has(.cepa-store) {
     grid-column: 3;
   }
 
-  .cepa-store .shop-hero,
   .cepa-store .serve-section,
   .cepa-store .bundle-feature {
     grid-template-columns: 1fr;
   }
 
   .cepa-store .shop-hero {
-    min-height: auto;
+    min-height: min(78vh, 720px);
   }
 
-  .cepa-store .hero-panel {
-    min-height: 280px;
+  .cepa-store .hero-copy {
+    min-height: min(78vh, 720px);
+    padding: clamp(1.75rem, 6vw, 3rem);
   }
 
   .cepa-store .hero-copy h1 {
     max-width: none;
+  }
+
+  .cepa-store .hero-scrim {
+    background:
+      linear-gradient(180deg, rgba(61, 11, 27, 0.35) 0%, rgba(61, 11, 27, 0.82) 70%, rgba(61, 11, 27, 0.92) 100%);
   }
 
   .cepa-store .product-grid {
@@ -762,5 +788,14 @@ body:has(.cepa-store) {
 @media (prefers-reduced-motion: reduce) {
   .cepa-store .product-card {
     transition: none;
+  }
+
+  .cepa-store .hero-video {
+    display: none;
+  }
+
+  .cepa-store .hero-media {
+    background:
+      center / cover no-repeat url("/brand/video/hero-poster.jpg");
   }
 }

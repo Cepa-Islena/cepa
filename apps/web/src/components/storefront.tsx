@@ -161,9 +161,23 @@ export function Storefront({
 
       <main>
         <section className="shop-hero" id="shop">
+          <div className="hero-media" aria-hidden="true">
+            <video
+              className="hero-video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster="/brand/video/hero-poster.jpg"
+            >
+              <source src="/brand/video/hero-loop.mp4" type="video/mp4" />
+            </video>
+            <div className="hero-scrim" />
+          </div>
           <div className="hero-copy">
             <p className="eyebrow">SJ, PR · Jugos verdes y shots</p>
-            <h1>An island juice for the yellow hour.</h1>
+            <h1>An island juice worth the ritual.</h1>
             <p>
               Bright, cold-pressed flavors for metro San Juan. Not medical advice — just a ritual worth coming back
               for.
@@ -181,9 +195,6 @@ export function Storefront({
               <span>Made to order</span>
               <span>Metro delivery</span>
             </div>
-          </div>
-          <div className="hero-panel" aria-label="Cepa product artwork">
-            <img src="/brand/corillo-street.png" alt="" />
           </div>
         </section>
 
