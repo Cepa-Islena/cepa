@@ -19,7 +19,6 @@ import { useStorefrontCart } from "@/hooks/use-storefront-cart";
 import { useStorefrontCatalog } from "@/hooks/use-storefront-catalog";
 import { useStorefrontCheckout, type CheckoutState } from "@/hooks/use-storefront-checkout";
 import { useStorefrontNavigation } from "@/hooks/use-storefront-navigation";
-import { ScrollFruitField } from "@/components/scroll-fruit-field";
 import { addOns, metroPueblos, products, products as staticProducts, type CartItem, type Product, type ProductKind } from "@/lib/catalog";
 import { formatPrice, remaining, type CartLine, type QuizAnswers } from "@/lib/commerce";
 
@@ -89,15 +88,14 @@ export function Storefront({
   const { contactState, submitContact } = useContactForm();
 
   return (
-    <div className="site-shell calm-store">
-      <ScrollFruitField />
-      <div className="announcement slim">
+    <div className="site-shell cepa-store">
+      <div className="announcement">
         <span>Delivery en SJ metro</span>
         <span>Cold pressed by drop</span>
         <span>Sin azúcar añadida</span>
       </div>
 
-      <header className="site-header calm-header">
+      <header className="site-header">
         <button
           className="icon-button mobile-menu"
           type="button"
@@ -107,13 +105,54 @@ export function Storefront({
         >
           <Menu size={22} />
         </button>
+        <nav className="nav-links left-nav" aria-label="Main navigation">
+          <a
+            href="#about"
+            onClick={(event) => {
+              event.preventDefault();
+              scrollToSection("about");
+            }}
+          >
+            Story
+          </a>
+          <a
+            href="#delivery"
+            onClick={(event) => {
+              event.preventDefault();
+              scrollToSection("delivery");
+            }}
+          >
+            Delivery
+          </a>
+        </nav>
         <a className="brand-mark" href="#shop" aria-label="Cepa Isleña home">
           <img src="/brand/logo-borra.png" alt="Cepa Isleña" />
         </a>
-        <DesktopNav selectProduct={selectProduct} scrollToSection={scrollToSection} />
-        <button className="cart-button" type="button" onClick={openCart}>
-          <ShoppingBag size={19} /> Cart <span>{itemCount}</span>
-        </button>
+        <div className="header-right">
+          <nav className="nav-links" aria-label="Secondary navigation">
+            <a
+              href="#products"
+              onClick={(event) => {
+                event.preventDefault();
+                scrollToSection("products");
+              }}
+            >
+              Shop
+            </a>
+            <a
+              href="#contact"
+              onClick={(event) => {
+                event.preventDefault();
+                scrollToSection("contact");
+              }}
+            >
+              Contact
+            </a>
+          </nav>
+          <button className="cart-button" type="button" onClick={openCart}>
+            <ShoppingBag size={18} /> Cart <span>{itemCount}</span>
+          </button>
+        </div>
       </header>
 
       {mobileNavOpen ? (
@@ -121,20 +160,20 @@ export function Storefront({
       ) : null}
 
       <main>
-        <section className="shop-hero calm-hero" id="shop">
+        <section className="shop-hero" id="shop">
           <div className="hero-copy">
-            <p className="eyebrow">SJ, PR · jugos verdes y shots</p>
-            <h1>Juice that makes the afternoon feel better.</h1>
+            <p className="eyebrow">SJ, PR · Jugos verdes y shots</p>
+            <h1>An island juice for the yellow hour.</h1>
             <p>
-              Bright island flavors, cold pressed for metro San Juan. Not medical advice — just something your body and
-              your corillo will look forward to.
+              Bright, cold-pressed flavors for metro San Juan. Not medical advice — just a ritual worth coming back
+              for.
             </p>
             <div className="hero-actions">
               <a className="button primary" href="#products">
-                Shop this drop <ArrowRight size={18} />
+                Shop now <ArrowRight size={18} />
               </a>
               <button className="button secondary" type="button" onClick={() => addToCart("mvp-sample-bundle")}>
-                Start with the sample pack
+                Try the sample pack
               </button>
             </div>
             <div className="hero-proof">
@@ -148,29 +187,56 @@ export function Storefront({
           </div>
         </section>
 
-        <section className="ritual-strip" aria-label="How Cepa works">
-          <article>
-            <strong>01</strong>
-            <h3>Pick once</h3>
-            <p>Choose a juice, a shot, or the sample pack.</p>
-          </article>
-          <article>
-            <strong>02</strong>
-            <h3>We press the drop</h3>
-            <p>Small batches for metro San Juan — fresh, not endless stock.</p>
-          </article>
-          <article>
-            <strong>03</strong>
-            <h3>Make it a ritual</h3>
-            <p>Shake well, sip cold, come back for the next drop.</p>
-          </article>
+        <section className="flavor-row" aria-label="Flavor notes">
+          <span>Parcha</span>
+          <span>Acerola</span>
+          <span>Piña menta</span>
+          <span>Tamarindo</span>
+          <span>Jengibre</span>
         </section>
 
-        <section className="shop-section calm-shop" id="products">
-          <div className="section-heading calm-heading">
+        <section className="editorial-band" aria-label="Brand statement">
+          <div className="editorial-band-inner">
+            <h2>“Pleasure to be sipped by you.”</h2>
+            <p>
+              Begin your afternoon with Cepa — small-batch juices and shots pressed for the corillo. Fresh flavor
+              first, island character always.
+            </p>
+            <a className="button primary" href="#products">
+              Shop Cepa
+            </a>
+          </div>
+        </section>
+
+        <section className="serve-section" aria-label="Signature serve">
+          <div>
+            <p>The signature serve</p>
+            <h2>Shake well. Sip cold. Share the bag.</h2>
+            <div className="serve-steps">
+              <article>
+                <strong>1</strong>
+                <span>Pick your juice, shot, or sample pack.</span>
+              </article>
+              <article>
+                <strong>2</strong>
+                <span>We press the drop for metro San Juan.</span>
+              </article>
+              <article>
+                <strong>3</strong>
+                <span>Refrigerate on arrival and shake before every sip.</span>
+              </article>
+            </div>
+          </div>
+          <div className="serve-visual">
+            <img src="/brand/corillo-pulpa-scene.png" alt="Cepa serve scene" />
+          </div>
+        </section>
+
+        <section className="shop-section" id="products">
+          <div className="section-heading">
             <div>
-              <p>This drop</p>
-              <h2>Shop the flavors people reorder.</h2>
+              <p>Shop the drop</p>
+              <h2>Flavors made to reorder.</h2>
             </div>
             <div className="filters" aria-label="Product filters">
               {[
@@ -192,7 +258,7 @@ export function Storefront({
           </div>
 
           {visibleProducts.length ? (
-            <div className="product-grid calm-grid">
+            <div className="product-grid">
               {visibleProducts.map((product) => (
                 <ProductCard key={product.slug} product={product} addToCart={addToCart} selectProduct={selectProduct} />
               ))}
@@ -205,7 +271,7 @@ export function Storefront({
           )}
         </section>
 
-        <section className="bundle-feature calm-bundle" id="bundles">
+        <section className="bundle-feature" id="bundles">
           <div className="bundle-art">
             <img src="/brand/corillo-logo-scene.png" alt="Cepa Corillo illustration" />
           </div>
@@ -213,7 +279,7 @@ export function Storefront({
             <p>Best first buy</p>
             <h2>MVP Sample Bundle</h2>
             <span className="price-lockup">$22 · 5 flavors</span>
-            <p>The easiest way to fall in love with Cepa. One pack, every launch flavor.</p>
+            <p>One pack. Every launch flavor. The easiest way to fall in love with Cepa.</p>
             <ul>
               {products[5].components.map((component) => (
                 <li key={component.recipeSlug}>
@@ -222,7 +288,7 @@ export function Storefront({
                 </li>
               ))}
             </ul>
-            <button className="button primary wide" type="button" onClick={() => addToCart("mvp-sample-bundle")}>
+            <button className="button primary" type="button" onClick={() => addToCart("mvp-sample-bundle")}>
               Add sample pack
             </button>
           </div>
