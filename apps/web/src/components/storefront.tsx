@@ -91,6 +91,15 @@ export function Storefront({
   return (
     <div className="site-shell">
       <ScrollFruitField />
+      {!commerceConfigured ? (
+        <div className="config-banner" role="status">
+          <strong>Checkout is paused on this deploy.</strong>
+          <span>
+            Vercel is missing Supabase + Stripe env vars. Add them in Vercel → Project → Settings → Environment
+            Variables, then redeploy. See docs/domain-go-live.md.
+          </span>
+        </div>
+      ) : null}
       <div className="announcement">
         <span>Delivery en SJ metro</span>
         <span>Sin azúcar añadida</span>

@@ -2,65 +2,54 @@
 
 .fruit-field {
   pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 3;
-  overflow: hidden;
-}
-
-.fruit-field-track {
   position: absolute;
-  inset: 0;
-  transform: translate3d(0, calc(var(--scroll-progress, 0) * -4vh), 0);
-  will-change: transform;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 2;
+  overflow: visible;
 }
 
 .fruit-actor {
   position: absolute;
   margin: 0;
   opacity: 0;
-  transform: translate3d(0, 48px, 0) scale(0.55) rotate(var(--actor-rotate, 0deg));
-  filter: drop-shadow(0 18px 28px rgba(61, 11, 27, 0.18));
+  transform: translate3d(0, 40px, 0) scale(0.4) rotate(var(--actor-rotate, 0deg));
+  filter: drop-shadow(0 16px 24px rgba(61, 11, 27, 0.22));
   transition:
-    opacity 0.55s ease,
-    transform 0.7s cubic-bezier(0.2, 0.9, 0.2, 1.15);
+    opacity 0.45s ease,
+    transform 0.65s cubic-bezier(0.18, 0.9, 0.2, 1.2);
+  z-index: 2;
 }
 
 .fruit-actor.is-spawned {
   opacity: 1;
   transform: translate3d(0, 0, 0) scale(1) rotate(var(--actor-rotate, 0deg));
-  animation: fruit-bob 4.8s ease-in-out infinite;
+  animation: fruit-bob 4.6s ease-in-out infinite;
 }
 
 .fruit-actor img {
   width: 100%;
   height: auto;
   border-radius: 999px;
-  background: rgba(244, 242, 233, 0.72);
-  border: 2px solid rgba(61, 11, 27, 0.12);
-  padding: 0.35rem;
+  background: rgba(244, 242, 233, 0.92);
+  border: 3px solid rgba(61, 11, 27, 0.18);
+  padding: 0.4rem;
+  box-shadow: 0 10px 0 rgba(61, 11, 27, 0.08);
 }
 
 .fruit-actor figcaption {
   margin-top: 0.35rem;
   text-align: center;
   font-family: "Sequia Cepa", Impact, sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--borra);
-  background: rgba(244, 242, 233, 0.88);
-  border: 1px solid rgba(61, 11, 27, 0.14);
+  background: var(--lima);
+  border: 1px solid var(--borra);
   border-radius: 999px;
-  padding: 0.2rem 0.45rem;
-}
-
-.fruit-actor-left.is-spawned {
-  animation-name: fruit-bob-left;
-}
-
-.fruit-actor-right.is-spawned {
-  animation-name: fruit-bob-right;
+  padding: 0.22rem 0.5rem;
 }
 
 @keyframes fruit-bob {
@@ -69,27 +58,7 @@
     transform: translate3d(0, 0, 0) scale(1) rotate(var(--actor-rotate, 0deg));
   }
   50% {
-    transform: translate3d(0, -10px, 0) scale(1.03) rotate(calc(var(--actor-rotate, 0deg) + 3deg));
-  }
-}
-
-@keyframes fruit-bob-left {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1) rotate(var(--actor-rotate, 0deg));
-  }
-  50% {
-    transform: translate3d(6px, -12px, 0) scale(1.04) rotate(calc(var(--actor-rotate, 0deg) + 4deg));
-  }
-}
-
-@keyframes fruit-bob-right {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1) rotate(var(--actor-rotate, 0deg));
-  }
-  50% {
-    transform: translate3d(-6px, -10px, 0) scale(1.04) rotate(calc(var(--actor-rotate, 0deg) - 4deg));
+    transform: translate3d(0, -14px, 0) scale(1.05) rotate(calc(var(--actor-rotate, 0deg) + 4deg));
   }
 }
 
@@ -188,7 +157,10 @@
 .spotlight,
 .quiz-card,
 .admin-row,
-.cart-drawer {
+.cart-drawer,
+.editorial-band,
+.serve-strip,
+.info-strip {
   position: relative;
   z-index: 4;
 }
@@ -280,9 +252,35 @@
   min-height: 260px;
 }
 
+.config-banner {
+  position: relative;
+  z-index: 6;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  background: #fff3bf;
+  border-bottom: 1px solid var(--borra);
+  color: var(--borra);
+  font-size: 0.95rem;
+}
+
+.config-banner strong {
+  font-family: "Sequia Cepa", Impact, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.site-shell {
+  position: relative;
+  overflow-x: clip;
+}
+
 @media (max-width: 900px) {
-  .fruit-field {
-    display: none;
+  .fruit-actor {
+    width: 72px !important;
+  }
+
+  .fruit-actor figcaption {
+    font-size: 0.62rem;
   }
 
   .serve-strip {
@@ -291,14 +289,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fruit-field {
-    display: none;
-  }
-
   .fruit-actor,
   .button.primary,
   .product-card {
     transition: none !important;
     animation: none !important;
+  }
+
+  .fruit-actor.is-spawned {
+    opacity: 0.9;
+    transform: none;
   }
 }

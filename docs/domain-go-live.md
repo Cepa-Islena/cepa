@@ -1,69 +1,49 @@
-# Check the real domain
+# Domain go-live / test checkout
 
-Production domain expected: `https://cepaislena.com`
+If the cart says **Checkout is paused until Supabase and Stripe env vars are configured**, the live site does not have the keys. Code alone cannot take payments.
 
-## 1. Deploy this branch
+## Fix checkout (required)
 
-Push `main` to GitHub so Vercel rebuilds.
+In **Vercel → Project → Settings → Environment Variables** (Production):
 
-## 2. Vercel environment variables
+| Name | Example |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | `https://cepaislena.com` |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase anon/publishable key |
+| `SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
+| `STRIPE_SECRET_KEY` | `sk_test_...` for fake money |
+| `STRIPE_WEBHOOK_SECRET` | from Stripe webhook |
 
-Set for **Production** (and Preview if you want paid tests there too):
+Then **Redeploy** the latest `main` deployment.
 
-```text
-NEXT_PUBLIC_SITE_URL=https://cepaislena.com
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
-SUPABASE_SECRET_KEY=...   # or SUPABASE_SERVICE_ROLE_KEY
-STRIPE_SECRET_KEY=sk_test_...   # use test key until real launch
-STRIPE_WEBHOOK_SECRET=whsec_...
-```
+### Stripe test money
 
-Private gate (optional while reviewing with owner):
+1. Use **test mode** keys (`sk_test_...`).
+2. Webhook endpoint: `https://cepaislena.com/api/stripe/webhook`
+3. Events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired`, `checkout.session.async_payment_failed`
+4. Pay with card `4242 4242 4242 4242`, any future expiry, any CVC.
 
-```text
-SITE_ACCESS_ENABLED=true
-SITE_ACCESS_USERNAME=cepa
-SITE_ACCESS_PASSWORD=...strong...
-```
+### Supabase
 
-To let the owner browse without the browser password prompt:
+Apply all migrations in `supabase/migrations/` in order.
 
-```text
-SITE_ACCESS_ENABLED=false
-```
+## Fix “same old UI”
 
-## 3. Stripe webhook (test mode first)
+1. Confirm Vercel deployed commit `main` after the fruit UI push.
+2. Hard refresh: Cmd+Shift+R
+3. You should see:
+   - yellow config banner if env missing
+   - lime “Pleasure to be sipped by you” band
+   - fruit bubbles with names (Parcha, Acerola…) floating on the sides
+4. If still old: Vercel Root Directory / monorepo settings may be wrong. Prefer:
+   - Root Directory = repository root
+   - Install = `pnpm install --frozen-lockfile`
+   - Build = `pnpm --filter @cepa/web build`
+   - Output = `apps/web/.next`
 
-Endpoint:
+## Site password gate
 
-```text
-https://cepaislena.com/api/stripe/webhook
-```
+If the browser asks for username/password, `SITE_ACCESS_ENABLED=true`.
 
-Events:
-
-- `checkout.session.completed`
-- `checkout.session.async_payment_succeeded`
-- `checkout.session.expired`
-- `checkout.session.async_payment_failed`
-
-## 4. Supabase migrations
-
-Apply every file in `supabase/migrations/` in order, including:
-
-- `20260711120000_launch_hardening.sql`
-- `20260711130000_remove_order_minimums.sql`
-
-## 5. Smoke check on the live domain
-
-1. Open `https://cepaislena.com` (enter site password if gate is on).
-2. Scroll — fruit characters should spawn.
-3. Add one product, fill name/phone/address, checkout with Stripe **test** card `4242 4242 4242 4242`.
-4. Confirm success page verifies payment.
-5. Confirm `/admin` shows the paid order after webhook.
-
-## Notes
-
-- Checkout POSTs require the browser origin to match `NEXT_PUBLIC_SITE_URL`.
-- Keep using Stripe **test** keys until the owner is ready for live money.
+For owner browsing without a password: set `SITE_ACCESS_ENABLED=false` and redeploy.
