@@ -31,19 +31,24 @@ export function isCommerceConfigured() {
 }
 
 export function getConfiguredSiteOrigin() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL?.trim(),
+    "https://cepaislena.com",
+    "http://localhost:3000",
+  ].filter(Boolean) as string[];
 
-  try {
-    const parsedUrl = new URL(siteUrl);
-
-    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-      throw new Error("Unsupported site URL protocol.");
+  for (const siteUrl of candidates) {
+    try {
+      const parsedUrl = new URL(siteUrl);
+      if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+        return parsedUrl.origin;
+      }
+    } catch {
+      // try next candidate
     }
-
-    return parsedUrl.origin;
-  } catch {
-    throw new Error("NEXT_PUBLIC_SITE_URL must be a valid absolute http or https URL.");
   }
+
+  return "https://cepaislena.com";
 }
 
 export async function getRequestOrigin() {

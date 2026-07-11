@@ -18,15 +18,15 @@ describe("site origin configuration", () => {
     await expect(getRequestOrigin()).resolves.toBe("https://cepaislena.com");
   });
 
-  it("falls back to localhost only when no site URL is configured", () => {
+  it("falls back to production domain when no site URL is configured", () => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
 
-    expect(getConfiguredSiteOrigin()).toBe("http://localhost:3000");
+    expect(getConfiguredSiteOrigin()).toBe("https://cepaislena.com");
   });
 
-  it("rejects invalid site URLs instead of deriving origins from request headers", async () => {
+  it("ignores invalid site URLs and falls back safely", async () => {
     process.env.NEXT_PUBLIC_SITE_URL = "javascript:alert(1)";
 
-    await expect(getRequestOrigin()).rejects.toThrow("NEXT_PUBLIC_SITE_URL must be a valid absolute http or https URL.");
+    await expect(getRequestOrigin()).resolves.toBe("https://cepaislena.com");
   });
 });
