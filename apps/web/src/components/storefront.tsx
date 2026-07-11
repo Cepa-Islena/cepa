@@ -168,7 +168,7 @@ export function Storefront({
               muted
               loop
               playsInline
-              preload="metadata"
+              preload="auto"
               poster="/brand/video/hero-poster.jpg"
             >
               <source src="/brand/video/hero-loop.mp4" type="video/mp4" />
@@ -230,16 +230,16 @@ export function Storefront({
               </article>
               <article>
                 <strong>2</strong>
-                <span>We press the drop for metro San Juan.</span>
+                <span>We deliver your bag to metro San Juan.</span>
               </article>
               <article>
                 <strong>3</strong>
-                <span>Refrigerate on arrival and shake before every sip.</span>
+                <span>Keep it cold, shake well, and sip fresh.</span>
               </article>
             </div>
           </div>
           <div className="serve-visual">
-            <img src="/brand/corillo-pulpa-scene.png" alt="Cepa serve scene" />
+            <img src="/brand/corillo-pulpa-scene.png" alt="Cepa corillo characters" />
           </div>
         </section>
 
@@ -947,13 +947,17 @@ function CartDrawer({
               ))}
             </div>
             <div className="cart-footer">
+              <p className="cart-why-info">
+                Just what we need to deliver your bag: name, phone, and address. Receipt email is optional.
+              </p>
               <label className="drawer-email">
                 <span>Name</span>
                 <input
                   type="text"
                   value={customerName}
-                  placeholder="Your name"
+                  placeholder="Who should we deliver to?"
                   required
+                  autoComplete="name"
                   onChange={(event) => setCustomerName(event.target.value)}
                 />
               </label>
@@ -962,8 +966,9 @@ function CartDrawer({
                 <input
                   type="tel"
                   value={customerPhone}
-                  placeholder="787..."
+                  placeholder="For delivery day contact"
                   required
+                  autoComplete="tel"
                   onChange={(event) => setCustomerPhone(event.target.value)}
                 />
               </label>
@@ -972,8 +977,9 @@ function CartDrawer({
                 <input
                   type="text"
                   value={deliveryAddress}
-                  placeholder="Street, unit, pueblo area"
+                  placeholder="Street, unit, pueblo"
                   required
+                  autoComplete="street-address"
                   onChange={(event) => setDeliveryAddress(event.target.value)}
                 />
               </label>
@@ -982,26 +988,17 @@ function CartDrawer({
                 <input
                   type="text"
                   value={deliveryNotes}
-                  placeholder="Gate code, floor, timing notes"
+                  placeholder="Gate code, floor, timing"
                   onChange={(event) => setDeliveryNotes(event.target.value)}
                 />
               </label>
               <label className="drawer-email">
-                <span>Gift note (optional)</span>
-                <input
-                  type="text"
-                  value={giftNote}
-                  maxLength={280}
-                  placeholder="Un carinito for the bag"
-                  onChange={(event) => setGiftNote(event.target.value)}
-                />
-              </label>
-              <label className="drawer-email">
-                <span>Email for receipt</span>
+                <span>Email for receipt (optional)</span>
                 <input
                   type="email"
                   value={customerEmail}
                   placeholder="you@example.com"
+                  autoComplete="email"
                   onChange={(event) => setCustomerEmail(event.target.value)}
                 />
               </label>

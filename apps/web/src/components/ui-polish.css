@@ -161,7 +161,9 @@ body:has(.cepa-store) {
   height: 100%;
   object-fit: cover;
   object-position: center;
-  filter: saturate(1.05) contrast(1.04);
+  display: block;
+  filter: saturate(1.08) contrast(1.05);
+  background: var(--borra);
 }
 
 .cepa-store .hero-scrim {
@@ -375,14 +377,21 @@ body:has(.cepa-store) {
   aspect-ratio: 1;
   max-width: 520px;
   margin-inline: auto;
-  border: 1px solid var(--line);
-  background: #fff;
+  border: 3px solid var(--borra);
+  background: var(--pitaya);
+  box-shadow: var(--shadow);
+  display: grid;
+  place-items: center;
 }
 
 .cepa-store .serve-visual img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  mix-blend-mode: normal;
+  filter: none;
+  opacity: 1;
 }
 
 /* Shop */
@@ -798,4 +807,12 @@ body:has(.cepa-store) {
     background:
       center / cover no-repeat url("/brand/video/hero-poster.jpg");
   }
+}
+
+
+.cepa-store .cart-why-info {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
 }

@@ -36,7 +36,7 @@ export function useStorefrontCheckout(commerceConfigured: boolean) {
       if (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()) {
         setCheckoutState({
           status: "error",
-          message: "Add your name, phone, and delivery address before checkout.",
+          message: "We only need name, phone, and address to deliver.",
         });
         return;
       }
