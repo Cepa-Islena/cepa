@@ -483,22 +483,26 @@ function ProductCard({
           <ProductImage product={product} />
         </span>
       </button>
-      <div className="product-meta">
-        <p className="product-size">{product.kind === "bundle" ? "Bundle" : product.size}</p>
-        <div className="product-title-row">
-          <h3>{product.name}</h3>
-          <span className="product-price">{formatPrice(product.priceCents)}</span>
+      <div className="product-body">
+        <div className="product-meta">
+          <p className="product-size">{product.kind === "bundle" ? "Bundle" : product.size}</p>
+          <div className="product-title-row">
+            <h3>{product.name}</h3>
+            <span className="product-price">{formatPrice(product.priceCents)}</span>
+          </div>
         </div>
+        <p className="product-short">{product.short}</p>
       </div>
-      <p className="product-short">{product.short}</p>
-      <div className="product-tags">
-        {product.tags.slice(0, 2).map((tag) => (
-          <span key={tag}>{tag}</span>
-        ))}
+      <div className="product-footer">
+        <div className="product-tags" aria-label={`${product.name} highlights`}>
+          {product.tags.slice(0, 2).map((tag) => (
+            <span key={tag}>{tag}</span>
+          ))}
+        </div>
+        <button className="quick-add" type="button" onClick={() => addToCart(product.slug)}>
+          Add <Plus size={16} />
+        </button>
       </div>
-      <button className="quick-add" type="button" onClick={() => addToCart(product.slug)}>
-        Add <Plus size={16} />
-      </button>
     </article>
   );
 }

@@ -784,6 +784,13 @@ a {
   padding: 0.9rem 1.15rem 1rem;
 }
 
+.product-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--borra);
+}
+
 .product-tags span,
 .spotlight-tags span {
   border: 1px solid var(--borra);
@@ -798,7 +805,7 @@ a {
   align-items: center;
   justify-content: space-between;
   min-height: 54px;
-  margin-top: auto;
+  margin-top: 0;
   border: 0;
   border-top: 1px solid var(--borra);
   background: var(--borra);
