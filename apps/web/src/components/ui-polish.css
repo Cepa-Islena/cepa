@@ -162,16 +162,18 @@ body:has(.cepa-store) {
   object-fit: cover;
   object-position: center;
   display: block;
-  filter: saturate(1.08) contrast(1.05);
+  /* Real fruit/juice footage: keep it vivid without washing text */
+  filter: saturate(1.12) contrast(1.06) brightness(0.96);
   background: var(--borra);
 }
 
 .cepa-store .hero-scrim {
   position: absolute;
   inset: 0;
+  /* Lighter left band for readable white copy; right side shows the film */
   background:
-    linear-gradient(90deg, rgba(61, 11, 27, 0.88) 0%, rgba(61, 11, 27, 0.55) 48%, rgba(61, 11, 27, 0.28) 100%),
-    linear-gradient(0deg, rgba(61, 11, 27, 0.55) 0%, transparent 45%);
+    linear-gradient(90deg, rgba(61, 11, 27, 0.72) 0%, rgba(61, 11, 27, 0.38) 42%, rgba(61, 11, 27, 0.14) 100%),
+    linear-gradient(0deg, rgba(61, 11, 27, 0.42) 0%, transparent 48%);
   pointer-events: none;
 }
 
