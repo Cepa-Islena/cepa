@@ -458,15 +458,17 @@ function ProductCard({
 }) {
   return (
     <article className="product-card calm-card" style={cardStyle("--card-color", product.color)}>
-      <button className="product-image" type="button" onClick={() => selectProduct(product.slug)}>
-        <ProductImage product={product} />
+      <button className="product-image" type="button" onClick={() => selectProduct(product.slug)} aria-label={`View ${product.name}`}>
+        <span className="product-image-frame">
+          <ProductImage product={product} />
+        </span>
       </button>
       <div className="product-meta">
-        <div>
-          <p>{product.kind === "bundle" ? "Bundle" : product.size}</p>
+        <p className="product-size">{product.kind === "bundle" ? "Bundle" : product.size}</p>
+        <div className="product-title-row">
           <h3>{product.name}</h3>
+          <span className="product-price">{formatPrice(product.priceCents)}</span>
         </div>
-        <span>{formatPrice(product.priceCents)}</span>
       </div>
       <p className="product-short">{product.short}</p>
       <div className="product-tags">
