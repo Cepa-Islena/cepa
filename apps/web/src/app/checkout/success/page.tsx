@@ -18,11 +18,10 @@ export default async function CheckoutSuccessPage({
 
   if (!sessionId) {
     heading = "We couldn’t find this order.";
-    detail = "If you paid, keep your Stripe receipt and contact Cepa with the email you used at checkout.";
+    detail = "If you paid, keep your receipt email and contact Cepa so we can look it up.";
   } else if (!stripe) {
     heading = "Thanks for your order.";
-    detail =
-      "Payment confirmation is offline in this environment. If you paid, keep your Stripe receipt and Cepa will follow up.";
+    detail = "We’re confirming payment on our side. Keep your receipt email and Cepa will follow up with delivery details.";
   } else {
     try {
       const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -30,7 +29,7 @@ export default async function CheckoutSuccessPage({
 
       if (verified) {
         heading = "Order received.";
-        detail = "Payment confirmed. Cepa will follow up with delivery details.";
+        detail = "You’re all set. Cepa will follow up with delivery details.";
       } else if (session.status === "open") {
         heading = "Checkout still open.";
         detail = "This order isn’t paid yet. Head back to the shop if you still want the drop.";
@@ -49,7 +48,7 @@ export default async function CheckoutSuccessPage({
       <img src="/brand/logo-borra.png" alt="Cepa Isleña" />
       <h1>{heading}</h1>
       <p>{detail}</p>
-      {verified ? <p className="form-status success">Payment verified. You’re all set.</p> : null}
+      {verified ? <p className="form-status success">You’re all set.</p> : null}
       <Link className="button primary" href="/">
         Back to shop
       </Link>
