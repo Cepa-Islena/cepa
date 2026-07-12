@@ -17,7 +17,7 @@ function parseTopic(value: FormDataEntryValue | null): ContactMessageInput["topi
 export function useContactForm() {
   const [contactState, setContactState] = useState<ContactState>({
     status: "idle",
-    message: "For events, delivery questions, and pueblos outside the first route.",
+    message: "For events, delivery questions, and pueblos outside metro San Juan.",
   });
 
   const submitContact = useCallback(async (event: FormEvent<HTMLFormElement>) => {
