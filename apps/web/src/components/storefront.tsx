@@ -6,13 +6,10 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
-  Leaf,
   Menu,
   Minus,
   Plus,
   ShoppingBag,
-  Sprout,
-  Truck,
   X,
 } from "lucide-react";
 import { useContactForm, type ContactState } from "@/hooks/use-contact-form";
@@ -60,14 +57,10 @@ export function Storefront({
   const {
     activeKind,
     setActiveKind,
-    selectedProduct,
-    searchQuery,
-    setSearchQuery,
     quizAnswers,
     setQuizAnswers,
     visibleProducts,
     recommended,
-    currentDropRemaining,
     selectProduct,
   } = useStorefrontCatalog(catalogProducts);
   const { deliveryTown, setDeliveryTown, metro } = useDeliveryChecker();
@@ -521,100 +514,6 @@ function ProductCard({
   );
 }
 
-function Spotlight({ product, addToCart }: { product: Product; addToCart: (productSlug: string) => void }) {
-  return (
-    <article className="spotlight" style={cardStyle("--spotlight-color", product.color)}>
-      <div>
-        <p>{product.kind === "bundle" ? "Featured bundle" : "Featured recipe"}</p>
-        <h2>{product.name}</h2>
-        <span>{product.size}</span>
-        <p>{product.description}</p>
-        {product.ingredients.length ? (
-          <p className="ingredient-line">
-            <strong>Ingredients:</strong> {product.ingredients.join(", ")}
-          </p>
-        ) : null}
-        {product.allergens.length ? (
-          <p className="ingredient-line">
-            <strong>Allergens:</strong> {product.allergens.join(", ")}
-          </p>
-        ) : (
-          <p className="ingredient-line">
-            <strong>Allergens:</strong> none listed for this recipe — ask if you have concerns.
-          </p>
-        )}
-        <div className="spotlight-tags">
-          {product.tags.map((tag) => (
-            <span key={tag}>{tag}</span>
-          ))}
-        </div>
-        <button className="button primary" type="button" onClick={() => addToCart(product.slug)}>
-          Add to cart <Plus size={18} />
-        </button>
-      </div>
-      <ProductImage product={product} />
-    </article>
-  );
-}
-
-function AboutSection() {
-  return (
-    <section className="about-section" id="about">
-      <div className="section-heading stacked">
-        <p>About Us</p>
-        <h2>Mission, vision, values y corillo.</h2>
-      </div>
-      <div className="about-grid">
-        <article>
-          <span>Mission</span>
-          <h3>Jugo con intención.</h3>
-          <p>Ofrecemos jugos verdes y shots 100% naturales, cold pressed en drops pequeños con sabor local.</p>
-        </article>
-        <article>
-          <span>Vision</span>
-          <h3>Un Puerto Rico más conectado.</h3>
-          <p>Queremos que apoyar la agricultura local sea parte de la vida cotidiana, no algo extraordinario.</p>
-        </article>
-        <article>
-          <span>Values</span>
-          <h3>Comunidad, calidad, cuidado.</h3>
-          <p>Cepa se construye con manos reales, productores locales y decisiones pequeñas que sostienen algo más grande.</p>
-        </article>
-      </div>
-    </section>
-  );
-}
-
-function SubscriptionSection({ addToCart }: { addToCart: (productSlug: string) => void }) {
-  return (
-    <section className="subscription-section" id="subscription">
-      <div>
-        <p>Events + subscriptions</p>
-        <h2>Easy buying now. Subscriptions next.</h2>
-        <p>
-          Buy one drop at a time for now. Recurring subscriptions are coming next — same metro delivery, less thinking.
-        </p>
-      </div>
-      <div className="subscription-actions">
-        <article>
-          <h3>Weekly Corillo Pack</h3>
-          <p>6 bottles delivered once a week in metro pueblos.</p>
-          <button className="button primary" type="button" onClick={() => addToCart("mvp-sample-bundle")}>
-            Try the bundle
-          </button>
-        </article>
-        <article>
-          <h3>Events</h3>
-          <p>Small batch shots for pop-ups, office wellness, yoga mornings, and brand events.</p>
-          <a className="button secondary" href="#contact">
-            Ask about events
-          </a>
-        </article>
-      </div>
-    </section>
-  );
-}
-
 function DeliverySection({
   deliveryTown,
   setDeliveryTown,
@@ -813,29 +712,6 @@ function QuizSection({
             </button>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function TestimonialsSection() {
-  return (
-    <section className="testimonials-section" id="testimonials">
-      <div className="section-heading stacked">
-        <p>Early feedback</p>
-        <h2>Lo que dice el corillo.</h2>
-        <p className="legal-note">Sample quotes for brand direction. Replace with real customer reviews before public launch ads.</p>
-      </div>
-      <div className="testimonial-grid">
-        {products.slice(0, 6).map((product) => (
-          <article key={product.slug} style={cardStyle("--card-color", product.color)}>
-            <ProductImage product={product} />
-            <div>
-              <span>{product.name}</span>
-              <p>&ldquo;{product.testimonial}&rdquo;</p>
-            </div>
-          </article>
-        ))}
       </div>
     </section>
   );
@@ -1127,7 +1003,7 @@ function CartDrawer({
             </div>
             <div className="cart-footer">
               <p className="cart-why-info">
-                Just what we need to deliver your bag: name, phone, and address. Receipt email is optional.
+                Just what we need for delivery: name, phone, and address. Receipt email is optional.
               </p>
               <label className="drawer-email">
                 <span>Name</span>
