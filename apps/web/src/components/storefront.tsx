@@ -181,8 +181,7 @@ export function Storefront({
             <p className="eyebrow">SJ, PR · Jugos verdes y shots</p>
             <h1>An island juice worth the ritual.</h1>
             <p>
-              Bright, cold-pressed flavors for metro San Juan. Not medical advice — just a ritual worth coming back
-              for.
+              Bright, cold-pressed flavors for metro San Juan. Fresh by drop — a small ritual worth coming back for.
             </p>
             <div className="hero-actions">
               <a className="button primary" href="#products">
@@ -224,7 +223,7 @@ export function Storefront({
         <section className="serve-section" aria-label="Signature serve">
           <div>
             <p>The signature serve</p>
-            <h2>Shake well. Sip cold. Share the bag.</h2>
+            <h2>Shake well. Sip cold. Come back for more.</h2>
             <div className="serve-steps">
               <article>
                 <strong>1</strong>
@@ -232,7 +231,7 @@ export function Storefront({
               </article>
               <article>
                 <strong>2</strong>
-                <span>We deliver your bag to metro San Juan.</span>
+                <span>We deliver to metro San Juan.</span>
               </article>
               <article>
                 <strong>3</strong>
