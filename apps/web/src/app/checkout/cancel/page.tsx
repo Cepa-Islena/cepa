@@ -28,7 +28,6 @@ export default async function CheckoutCancelPage({ searchParams }: { searchParam
       <img src="/brand/logo-borra.png" alt="Cepa Isleña" />
       <h1>Checkout paused.</h1>
       <p>{releaseNote}</p>
-      {orderId ? <code>{orderId}</code> : null}
       <Link className="button primary" href="/#products">
         Return to cart
       </Link>

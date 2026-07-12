@@ -13,17 +13,16 @@ export default async function CheckoutSuccessPage({
   const stripe = getStripeClient();
 
   let heading = "Thanks — checking your order.";
-  let detail =
-    "If you completed payment, Stripe is confirming the session. Cepa will follow up with pickup or delivery details.";
+  let detail = "If you completed payment, we’re confirming it now. Cepa will follow up with delivery details.";
   let verified = false;
 
   if (!sessionId) {
-    heading = "Missing checkout session.";
-    detail = "Open this page from the Stripe success redirect, or contact Cepa with your receipt email.";
+    heading = "We couldn’t find this order.";
+    detail = "If you paid, keep your Stripe receipt and contact Cepa with the email you used at checkout.";
   } else if (!stripe) {
-    heading = "Payment received page is in offline mode.";
+    heading = "Thanks for your order.";
     detail =
-      "Stripe is not configured in this environment, so the session cannot be verified here. If you paid, keep your Stripe receipt.";
+      "Payment confirmation is offline in this environment. If you paid, keep your Stripe receipt and Cepa will follow up.";
   } else {
     try {
       const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -31,17 +30,17 @@ export default async function CheckoutSuccessPage({
 
       if (verified) {
         heading = "Order received.";
-        detail = "Stripe confirmed payment for this checkout session. Cepa will follow up with delivery details.";
+        detail = "Payment confirmed. Cepa will follow up with delivery details.";
       } else if (session.status === "open") {
         heading = "Checkout still open.";
-        detail = "This session is not paid yet. Return to the shop and finish checkout if you still want the drop.";
+        detail = "This order isn’t paid yet. Head back to the shop if you still want the drop.";
       } else {
         heading = "Payment not confirmed.";
-        detail = "This session is not marked paid. If you were charged, contact Cepa with your receipt email.";
+        detail = "If you were charged, contact Cepa with your receipt email.";
       }
     } catch {
-      heading = "Could not verify checkout session.";
-      detail = "The session id was invalid or Stripe is unavailable. Contact Cepa if you completed payment.";
+      heading = "Could not verify payment.";
+      detail = "If you completed payment, contact Cepa with your receipt email.";
     }
   }
 
@@ -50,8 +49,7 @@ export default async function CheckoutSuccessPage({
       <img src="/brand/logo-borra.png" alt="Cepa Isleña" />
       <h1>{heading}</h1>
       <p>{detail}</p>
-      {sessionId ? <code>{sessionId}</code> : null}
-      {verified ? <p className="form-status success">Payment verified with Stripe.</p> : null}
+      {verified ? <p className="form-status success">Payment verified. You’re all set.</p> : null}
       <Link className="button primary" href="/">
         Back to shop
       </Link>
