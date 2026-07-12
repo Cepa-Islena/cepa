@@ -28,6 +28,14 @@ export function getStripeWebhookSecret() {
   return process.env.STRIPE_WEBHOOK_SECRET || null;
 }
 
+export function getResendApiKey() {
+  return process.env.RESEND_API_KEY?.trim() || null;
+}
+
+export function getOrderNotifyEmail() {
+  return process.env.ORDER_NOTIFY_EMAIL?.trim() || process.env.OWNER_EMAIL?.trim() || "Cepaislena@gmail.com";
+}
+
 export function isCommerceConfigured() {
   return Boolean(getSupabaseServerEnv() && getStripeSecretKey());
 }

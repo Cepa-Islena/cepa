@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripeWebhookSecret } from "@/lib/env";
+import { loadOrderEmailPayload, sendCustomerOrderEmail, sendOwnerOrderEmail } from "@/lib/order-email";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getStripeClient } from "@/lib/stripe";
 
@@ -63,6 +64,27 @@ export async function POST(request: Request) {
 
     if (error) {
       return NextResponse.json({ error: "Could not mark order paid." }, { status: 500 });
+    }
+
+    // Notify owner (and customer if they left an email). Never fail the webhook on email issues.
+    if (!duplicateEvent) {
+      try {
+        const order = await loadOrderEmailPayload(supabase, orderId);
+        if (order) {
+          // Prefer Stripe session email if cart email was empty.
+          if (!order.customerEmail && session.customer_details?.email) {
+            order.customerEmail = session.customer_details.email;
+          }
+          if (!order.customerEmail && session.customer_email) {
+            order.customerEmail = session.customer_email;
+          }
+
+          await sendOwnerOrderEmail(order);
+          await sendCustomerOrderEmail(order);
+        }
+      } catch {
+        // Email is best-effort; order is already paid.
+      }
     }
   }
 

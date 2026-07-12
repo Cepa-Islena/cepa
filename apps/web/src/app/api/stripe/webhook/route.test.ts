@@ -4,6 +4,9 @@ const mocks = vi.hoisted(() => ({
   getStripeWebhookSecret: vi.fn(),
   createSupabaseServiceClient: vi.fn(),
   getStripeClient: vi.fn(),
+  loadOrderEmailPayload: vi.fn(),
+  sendOwnerOrderEmail: vi.fn(),
+  sendCustomerOrderEmail: vi.fn(),
 }));
 
 vi.mock("@/lib/env", () => ({
@@ -16,6 +19,12 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/stripe", () => ({
   getStripeClient: mocks.getStripeClient,
+}));
+
+vi.mock("@/lib/order-email", () => ({
+  loadOrderEmailPayload: mocks.loadOrderEmailPayload,
+  sendOwnerOrderEmail: mocks.sendOwnerOrderEmail,
+  sendCustomerOrderEmail: mocks.sendCustomerOrderEmail,
 }));
 
 import { POST } from "./route";
@@ -94,6 +103,9 @@ describe("Stripe webhook route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getStripeWebhookSecret.mockReturnValue("whsec_test");
+    mocks.loadOrderEmailPayload.mockResolvedValue(null);
+    mocks.sendOwnerOrderEmail.mockResolvedValue({ ok: true, skipped: false, id: "email_1" });
+    mocks.sendCustomerOrderEmail.mockResolvedValue({ ok: true, skipped: true, error: "No customer email" });
   });
 
   it("rejects requests without a Stripe signature", async () => {
