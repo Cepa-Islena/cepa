@@ -78,13 +78,13 @@ export const products: Product[] = [
   },
   {
     slug: "pina-menta",
-    name: "Pina Menta",
+    name: "Piña Menta",
     kind: "juice",
     size: "16 oz bottle",
     priceCents: 900,
     image: "/brand/product-pina.png",
     color: "#9BB9FF",
-    short: "Pina, mint, and a beach-day kind of fresh.",
+    short: "Piña, mint, and a beach-day kind of fresh.",
     description: "A cooling juice for hot days, made fresh by drop.",
     tags: ["cold pressed", "no added sugar", "limited drop"],
     nutrients: ["refresh", "mint", "cooling"],
@@ -94,7 +94,7 @@ export const products: Product[] = [
     testimonial: "The one I want after the beach. Super fresh.",
     capacity: 100,
     sold: 0,
-    components: [{ recipeSlug: "pina-menta", recipeName: "Pina Menta", ounces: 16 }],
+    components: [{ recipeSlug: "pina-menta", recipeName: "Piña Menta", ounces: 16 }],
   },
   {
     slug: "tamarindo-root",
@@ -157,7 +157,7 @@ export const products: Product[] = [
     components: [
       { recipeSlug: "parcha-verde", recipeName: "Parcha Verde", ounces: 4 },
       { recipeSlug: "acerola-glow", recipeName: "Acerola Glow", ounces: 4 },
-      { recipeSlug: "pina-menta", recipeName: "Pina Menta", ounces: 4 },
+      { recipeSlug: "pina-menta", recipeName: "Piña Menta", ounces: 4 },
       { recipeSlug: "tamarindo-root", recipeName: "Tamarindo Root", ounces: 4 },
       { recipeSlug: "jengibre-shot", recipeName: "Jengibre Shot", ounces: 2 },
     ],
@@ -205,7 +205,7 @@ export const addOns: Product[] = [
 
 export const catalog = [...products, ...addOns];
 
-export const metroPueblos = ["San Juan", "Guaynabo", "Bayamon", "Carolina", "Trujillo Alto", "Catano"];
+export const metroPueblos = ["San Juan", "Guaynabo", "Bayamón", "Carolina", "Trujillo Alto", "Cataño"];
 
 export function findProduct(productSlug: string) {
   return catalog.find((product) => product.slug === productSlug);

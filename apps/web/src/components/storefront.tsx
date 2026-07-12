@@ -22,7 +22,7 @@ import { useStorefrontCatalog } from "@/hooks/use-storefront-catalog";
 import { useStorefrontCheckout, type CheckoutState } from "@/hooks/use-storefront-checkout";
 import { useStorefrontNavigation } from "@/hooks/use-storefront-navigation";
 import { addOns, metroPueblos, products, products as staticProducts, type CartItem, type Product, type ProductKind } from "@/lib/catalog";
-import { formatPrice, remaining, type CartLine, type QuizAnswers } from "@/lib/commerce";
+import { formatPrice, normalizeTownName, remaining, type CartLine, type QuizAnswers } from "@/lib/commerce";
 
 type StorefrontProps = {
   commerceConfigured: boolean;
@@ -293,12 +293,14 @@ export function Storefront({
             <span className="price-lockup">$22 · 5 flavors</span>
             <p>One pack. Every launch flavor. The easiest way to fall in love with Cepa.</p>
             <ul>
-              {products[5].components.map((component) => (
-                <li key={component.recipeSlug}>
-                  <span>{component.recipeName}</span>
-                  <span>{component.ounces} oz</span>
-                </li>
-              ))}
+              {(products.find((product) => product.slug === "mvp-sample-bundle") ?? products[0]).components.map(
+                (component) => (
+                  <li key={component.recipeSlug}>
+                    <span>{component.recipeName}</span>
+                    <span>{component.ounces} oz</span>
+                  </li>
+                ),
+              )}
             </ul>
             <button className="button primary" type="button" onClick={() => addToCart("mvp-sample-bundle")}>
               Add sample pack
@@ -340,6 +342,12 @@ export function Storefront({
               }
             });
           }}
+        />
+        <QuizSection
+          answers={quizAnswers}
+          setAnswers={setQuizAnswers}
+          recommendation={recommended}
+          addToCart={addToCart}
         />
         <ContactSection contactState={contactState} submitContact={submitContact} />
       </main>
@@ -415,13 +423,20 @@ function MobileNav({
 }) {
   return (
     <nav className="mobile-nav" aria-label="Mobile navigation">
-      {["shop", "about", "products", "delivery", "quiz", "contact"].map((id) => (
+      {[
+        ["shop", "Home"],
+        ["about", "About"],
+        ["products", "Order"],
+        ["delivery", "Delivery"],
+        ["quiz", "Quiz"],
+        ["contact", "Contact"],
+      ].map(([id, label]) => (
         <button
           key={id}
           type="button"
           onClick={() => scrollToSection(id)}
         >
-          {id === "products" ? "Order" : id}
+          {label}
         </button>
       ))}
       {products.map((product) => (
@@ -686,7 +701,7 @@ function DeliverySection({
 }
 
 function normalizeChipActive(value: string, town: string) {
-  return value.trim().toLowerCase() === town.toLowerCase();
+  return normalizeTownName(value) === normalizeTownName(town);
 }
 
 function optionButton({
@@ -719,9 +734,9 @@ function QuizSection({
   return (
     <section className="quiz-section" id="quiz">
       <div className="quiz-copy">
-        <p>No email gate</p>
+        <p>Flavor quiz</p>
         <h2>Find your Cepa match.</h2>
-        <p>Answer fast, get a pairing instantly. Later this can become an AI pairing flow for taste and routine.</p>
+        <p>Three quick picks. One juice recommendation. No email required.</p>
       </div>
       <div className="quiz-card">
         <div className="quiz-step">
@@ -911,7 +926,7 @@ function ContactSection({
             aria-haspopup="listbox"
             aria-expanded={topicOpen}
             aria-controls={listboxId}
-            aria-labelledby={`${listboxId}-label`}
+            aria-label={`Topic: ${selected.label}`}
             onClick={() => setTopicOpen((open) => !open)}
           >
             <span>{selected.label}</span>

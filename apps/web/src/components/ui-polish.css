@@ -923,6 +923,137 @@ body:has(.cepa-store) {
   font-size: 0.88rem;
 }
 
+.cepa-store .quiz-section {
+  padding: clamp(2.5rem, 5vw, 4rem) clamp(1.25rem, 4vw, 3rem);
+  border-bottom: 1px solid var(--line);
+  background: #fff7f0;
+  color: var(--borra);
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(1.25rem, 4vw, 2.5rem);
+  align-items: start;
+}
+
+.cepa-store .quiz-copy p:first-child {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  margin: 0 0 0.5rem;
+}
+
+.cepa-store .quiz-copy h2 {
+  font-family: "New Spirit Cepa", Georgia, serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  margin: 0 0 0.75rem;
+}
+
+.cepa-store .quiz-copy p {
+  margin: 0;
+  color: var(--ink-soft);
+  max-width: 32ch;
+  line-height: 1.5;
+}
+
+.cepa-store .quiz-card {
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: #fff;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  display: grid;
+  gap: 1.1rem;
+  box-shadow: var(--shadow);
+}
+
+.cepa-store .quiz-step {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.cepa-store .quiz-step > span {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--lima);
+  color: var(--borra);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.cepa-store .quiz-step h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.cepa-store .quiz-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.cepa-store .quiz-options button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--pulpa);
+  color: var(--borra);
+  min-height: 38px;
+  padding: 0 0.9rem;
+  font-size: 0.82rem;
+}
+
+.cepa-store .quiz-options button.selected,
+.cepa-store .quiz-options button:hover {
+  background: var(--borra);
+  border-color: var(--borra);
+  color: var(--pulpa);
+}
+
+.cepa-store .quiz-result {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 0.9rem;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+
+.cepa-store .quiz-result img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.cepa-store .quiz-result p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.cepa-store .quiz-result h3 {
+  margin: 0.15rem 0 0.25rem;
+  font-family: "New Spirit Cepa", Georgia, serif;
+  font-size: 1.35rem;
+}
+
+.cepa-store .quiz-result span {
+  display: block;
+  margin-bottom: 0.7rem;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 900px) {
+  .cepa-store .quiz-section {
+    grid-template-columns: 1fr;
+  }
+}
+
 .cepa-store .contact-form {
   border: 1px solid var(--line);
   border-radius: 1.25rem;
