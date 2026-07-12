@@ -49,20 +49,37 @@ body:has(.cepa-store) {
   opacity: 0.45;
 }
 
-/* Centered premium header */
+/* Centered compact header — not edge-to-edge spread */
 .cepa-store .site-header {
   position: sticky;
   top: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto auto 1fr auto;
   align-items: center;
-  gap: 0.75rem 1rem;
-  min-height: 76px;
-  padding: 0.7rem clamp(1rem, 3vw, 2rem);
+  column-gap: clamp(0.75rem, 2vw, 1.35rem);
+  row-gap: 0.5rem;
+  min-height: 68px;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding: 0.55rem max(0.9rem, calc((100% - 1120px) / 2));
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cepa-store .site-header.on-media {
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+  color: var(--pulpa);
+}
+
+.cepa-store .site-header.on-page {
   background: rgba(244, 242, 233, 0.96);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
+  color: var(--borra);
+  box-shadow: 0 8px 24px rgba(61, 11, 27, 0.05);
 }
 
 .cepa-store .mobile-menu {
@@ -75,40 +92,53 @@ body:has(.cepa-store) {
   grid-column: 1;
   justify-self: start;
   display: flex;
-  gap: 1.15rem;
-  flex-wrap: wrap;
+  gap: 0.85rem;
+  flex-wrap: nowrap;
 }
 
 .cepa-store .brand-mark {
   grid-column: 2;
-  justify-self: center;
+  justify-self: start;
 }
 
 .cepa-store .brand-mark img {
-  width: min(150px, 40vw);
+  width: min(128px, 34vw);
   height: auto;
+  transition: filter 0.2s ease;
+}
+
+.cepa-store .site-header.on-media .brand-mark img {
+  filter: invert(1) brightness(1.15);
 }
 
 .cepa-store .header-right {
-  grid-column: 3;
+  grid-column: 4;
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: 0.7rem;
 }
 
 .cepa-store .nav-links {
   display: flex;
-  gap: 1.15rem;
-  flex-wrap: wrap;
+  gap: 0.85rem;
+  flex-wrap: nowrap;
 }
 
 .cepa-store .nav-links a {
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  opacity: 0.92;
+  white-space: nowrap;
+}
+
+.cepa-store .site-header.on-media .nav-links a {
+  color: var(--pulpa);
+}
+
+.cepa-store .site-header.on-page .nav-links a {
   color: var(--borra);
-  opacity: 0.88;
 }
 
 .cepa-store .nav-links a:hover {
@@ -118,31 +148,55 @@ body:has(.cepa-store) {
 }
 
 .cepa-store .cart-button {
-  border: 1px solid var(--borra);
+  border: 1px solid currentColor;
   border-radius: 999px;
   background: transparent;
-  min-height: 42px;
-  padding: 0 1rem;
-  gap: 0.45rem;
+  min-height: 40px;
+  padding: 0 0.9rem;
+  gap: 0.4rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   display: inline-flex;
   align-items: center;
+}
+
+.cepa-store .site-header.on-media .cart-button {
+  color: var(--pulpa);
+}
+
+.cepa-store .site-header.on-page .cart-button {
   color: var(--borra);
+  border-color: var(--borra);
 }
 
 .cepa-store .cart-button span {
+  background: currentColor;
+  color: var(--borra);
+  border-radius: 999px;
+  min-width: 1.4rem;
+  padding: 0.1rem 0.35rem;
+  text-align: center;
+}
+
+.cepa-store .site-header.on-media .cart-button span {
+  background: var(--pulpa);
+  color: var(--borra);
+}
+
+.cepa-store .site-header.on-page .cart-button span {
   background: var(--borra);
   color: var(--pulpa);
 }
 
-/* Hero — full-bleed video (Botivo rhythm, Cepa palette) */
+/* Hero under the nav (Botivo-style full bleed) */
 .cepa-store .shop-hero {
   position: relative;
   display: grid;
   grid-template-columns: 1fr;
-  min-height: min(88vh, 860px);
+  min-height: min(92vh, 900px);
+  margin-top: -68px;
+  padding-top: 68px;
   border: 0;
   border-bottom: 1px solid var(--line);
   background: var(--borra);
@@ -735,13 +789,155 @@ body:has(.cepa-store) {
   color: var(--borra);
 }
 
+.cepa-store .delivery-checker {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: #fff;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
 .cepa-store .delivery-checker input,
 .cepa-store .contact-section input,
-.cepa-store .contact-section textarea {
+.cepa-store .contact-section textarea,
+.cepa-store .contact-section select {
   border: 1px solid var(--line);
   background: #fff;
   border-radius: 0.9rem;
   color: var(--borra);
+  font: inherit;
+}
+
+.cepa-store .delivery-checker input {
+  min-height: 48px;
+  width: 100%;
+  padding: 0 1rem;
+}
+
+.cepa-store .delivery-town-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.cepa-store .delivery-town-chips button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--pulpa);
+  color: var(--borra);
+  min-height: 34px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.cepa-store .delivery-town-chips button.active,
+.cepa-store .delivery-town-chips button:hover {
+  background: var(--borra);
+  border-color: var(--borra);
+  color: var(--pulpa);
+}
+
+.cepa-store .delivery-result {
+  border-radius: 1rem;
+  padding: 0.95rem 1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.cepa-store .delivery-result strong {
+  font-family: "New Spirit Cepa", Georgia, serif;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  line-height: 1.15;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.cepa-store .delivery-result p {
+  margin: 0;
+  color: inherit;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.cepa-store .delivery-result.is-idle {
+  background: rgba(61, 11, 27, 0.05);
+  color: var(--borra);
+}
+
+.cepa-store .delivery-result.is-in {
+  background: rgba(202, 205, 58, 0.28);
+  color: var(--borra);
+  border: 1px solid rgba(61, 11, 27, 0.12);
+}
+
+.cepa-store .delivery-result.is-out {
+  background: rgba(164, 43, 84, 0.12);
+  color: var(--borra);
+  border: 1px solid rgba(164, 43, 84, 0.28);
+}
+
+.cepa-store .delivery-cta {
+  justify-self: start;
+  margin-top: 0.25rem;
+  min-height: 42px;
+  border-radius: 999px;
+  padding-inline: 1rem;
+}
+
+.cepa-store .delivery-metro-list {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+
+.cepa-store .contact-form {
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: #fff;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.cepa-store .contact-section .select-shell {
+  position: relative;
+}
+
+.cepa-store .contact-section .select-shell::after {
+  content: "";
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid var(--borra);
+  border-bottom: 2px solid var(--borra);
+  transform: translateY(-65%) rotate(45deg);
+  pointer-events: none;
+}
+
+.cepa-store .contact-section select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem 2.5rem 0.75rem 0.95rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+  background: var(--pulpa);
+  color: var(--borra);
+  cursor: pointer;
+}
+
+.cepa-store .contact-section select:focus,
+.cepa-store .contact-section input:focus,
+.cepa-store .contact-section textarea:focus,
+.cepa-store .delivery-checker input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(202, 205, 58, 0.35);
+  border-color: var(--borra);
 }
 
 .cepa-store .site-footer {
@@ -806,6 +1002,7 @@ body:has(.cepa-store) {
 
   .cepa-store .brand-mark {
     grid-column: 2;
+    justify-self: center;
   }
 
   .cepa-store .header-right {
@@ -819,6 +1016,8 @@ body:has(.cepa-store) {
 
   .cepa-store .shop-hero {
     min-height: min(78vh, 720px);
+    margin-top: -64px;
+    padding-top: 64px;
   }
 
   .cepa-store .hero-copy {

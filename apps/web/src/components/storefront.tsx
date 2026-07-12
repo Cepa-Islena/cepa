@@ -54,7 +54,7 @@ export function Storefront({
     addToCart,
     updateQuantity,
   } = useStorefrontCart();
-  const { mobileNavOpen, closeMobileNav, toggleMobileNav, scrollToSection } = useStorefrontNavigation();
+  const { mobileNavOpen, closeMobileNav, toggleMobileNav, scrollToSection, headerOnMedia } = useStorefrontNavigation();
   const {
     activeKind,
     setActiveKind,
@@ -95,7 +95,7 @@ export function Storefront({
         <span>Sin azúcar añadida</span>
       </div>
 
-      <header className="site-header">
+      <header className={`site-header ${headerOnMedia ? "on-media" : "on-page"}`}>
         <button
           className="icon-button mobile-menu"
           type="button"
@@ -321,7 +321,22 @@ export function Storefront({
           </div>
         </section>
 
-        <DeliverySection deliveryTown={deliveryTown} setDeliveryTown={setDeliveryTown} metro={metro} />
+        <DeliverySection
+          deliveryTown={deliveryTown}
+          setDeliveryTown={setDeliveryTown}
+          metro={metro}
+          scrollToContact={() => {
+            scrollToSection("contact");
+            window.requestAnimationFrame(() => {
+              const topic = document.querySelector<HTMLSelectElement>('select[name="topic"]');
+              if (topic) topic.value = "outside-metro";
+              const message = document.querySelector<HTMLTextAreaElement>('textarea[name="message"]');
+              if (message && !message.value.trim()) {
+                message.value = `Hola Cepa — estoy en ${deliveryTown.trim() || "___"} y quiero saber cuando llegan a mi pueblo.`;
+              }
+            });
+          }}
+        />
         <ContactSection contactState={contactState} submitContact={submitContact} />
       </main>
 
@@ -582,11 +597,27 @@ function DeliverySection({
   deliveryTown,
   setDeliveryTown,
   metro,
+  scrollToContact,
 }: {
   deliveryTown: string;
   setDeliveryTown: (value: string) => void;
-  metro: boolean;
+  metro: boolean | null;
+  scrollToContact: () => void;
 }) {
+  const statusClass = metro === null ? "is-idle" : metro ? "is-in" : "is-out";
+  const statusTitle =
+    metro === null
+      ? "Type your pueblo to check."
+      : metro
+        ? "You’re in the first delivery zone."
+        : "Not in metro yet — we’re still expanding.";
+  const statusBody =
+    metro === null
+      ? "MVP delivery is metro San Juan only so bottles arrive fresh."
+      : metro
+        ? "We can deliver to your area on drop day. Add juices and check out when ready."
+        : "We don’t deliver there yet. Leave your pueblo in Contact and we’ll prioritize the next routes.";
+
   return (
     <section className="delivery-section" id="delivery">
       <div>
@@ -594,22 +625,58 @@ function DeliverySection({
         <h2>Metro pueblos first.</h2>
         <p>For the MVP, delivery stays close so the product arrives fresh and the process stays manageable.</p>
       </div>
-      <div className="delivery-checker">
+      <div className={`delivery-checker ${statusClass}`}>
         <label htmlFor="town-search">Where are you ordering from?</label>
         <input
           id="town-search"
           type="text"
           value={deliveryTown}
-          placeholder="San Juan, Carolina, Bayamon..."
+          placeholder="San Juan, Carolina, Bayamón..."
+          autoComplete="address-level2"
           onChange={(event) => setDeliveryTown(event.target.value)}
         />
-        <strong className="delivery-result">
-          {metro ? "You are in the first delivery zone." : "We are still working to get the juice to you."}
-        </strong>
-        <p>Metro list: {metroPueblos.join(", ")}.</p>
+        <div className="delivery-town-chips" role="list" aria-label="Metro pueblos">
+          {metroPueblos.map((town) => (
+            <button
+              key={town}
+              type="button"
+              role="listitem"
+              className={normalizeChipActive(deliveryTown, town) ? "active" : undefined}
+              onClick={() => setDeliveryTown(town)}
+            >
+              {town}
+            </button>
+          ))}
+        </div>
+        <div className={`delivery-result ${statusClass}`} role="status" aria-live="polite">
+          <strong>{statusTitle}</strong>
+          <p>{statusBody}</p>
+          {metro === false ? (
+            <button className="button primary delivery-cta" type="button" onClick={scrollToContact}>
+              Tell us your pueblo
+            </button>
+          ) : null}
+          {metro === true ? (
+            <a
+              className="button secondary delivery-cta"
+              href="#products"
+              onClick={(event) => {
+                event.preventDefault();
+                document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              Shop the drop
+            </a>
+          ) : null}
+        </div>
+        <p className="delivery-metro-list">Metro list: {metroPueblos.join(", ")}.</p>
       </div>
     </section>
   );
+}
+
+function normalizeChipActive(value: string, town: string) {
+  return value.trim().toLowerCase() === town.toLowerCase();
 }
 
 function optionButton({
@@ -773,13 +840,15 @@ function ContactSection({
             <input name="email" type="email" required maxLength={240} />
           </label>
         </div>
-        <label>
+        <label className="field-select">
           <span>Topic</span>
-          <select name="topic" defaultValue="events">
-            <option value="events">Events</option>
-            <option value="outside-metro">Outside metro</option>
-            <option value="general">General</option>
-          </select>
+          <div className="select-shell">
+            <select name="topic" defaultValue="events">
+              <option value="events">Events</option>
+              <option value="outside-metro">Outside metro</option>
+              <option value="general">General</option>
+            </select>
+          </div>
         </label>
         <label>
           <span>Message</span>

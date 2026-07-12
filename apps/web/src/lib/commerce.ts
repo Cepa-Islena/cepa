@@ -58,9 +58,47 @@ export function estimatedProduceLb(cart: CartItem[]) {
   return Math.round(bottleCount(cart) * 1.35);
 }
 
+export function normalizeTownName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function isMetroTown(value: string) {
-  const normalized = value.trim().toLowerCase();
-  return metroPueblos.some((town) => town.toLowerCase() === normalized);
+  const normalized = normalizeTownName(value);
+  if (!normalized) return false;
+
+  const aliases: Record<string, string> = {
+    sj: "san juan",
+    "s juan": "san juan",
+    "san juan pr": "san juan",
+    "rio piedras": "san juan",
+    "hato rey": "san juan",
+    "condado": "san juan",
+    "santurce": "san juan",
+    "isla verde": "carolina",
+    bayamon: "bayamon",
+    "bayamon pr": "bayamon",
+    catano: "catano",
+    "trujillo alto": "trujillo alto",
+  };
+
+  const candidate = aliases[normalized] ?? normalized;
+
+  return metroPueblos.some((town) => {
+    const metroName = normalizeTownName(town);
+    if (candidate === metroName) return true;
+    // Allow short progressive typing once a few letters are in
+    if (candidate.length >= 4 && (metroName.startsWith(candidate) || candidate.startsWith(metroName))) {
+      return true;
+    }
+    return false;
+  });
 }
 
 export function productMatchesSearch(product: (typeof catalog)[number], searchQuery: string) {

@@ -45,7 +45,10 @@ describe("commerce helpers", () => {
   it("recognizes only first-route metro pueblos", () => {
     expect(isMetroTown("San Juan")).toBe(true);
     expect(isMetroTown(" carolina ")).toBe(true);
+    expect(isMetroTown("Bayamón")).toBe(true);
     expect(isMetroTown("Ponce")).toBe(false);
+    expect(isMetroTown("")).toBe(false);
+    expect(isMetroTown("sj")).toBe(true);
   });
 
   it("recommends products from quiz answers", () => {

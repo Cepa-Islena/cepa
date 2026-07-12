@@ -6,6 +6,7 @@ const sectionAnchorGapPx = 0;
 
 export function useStorefrontNavigation() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [headerOnMedia, setHeaderOnMedia] = useState(true);
 
   const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
   const toggleMobileNav = useCallback(() => setMobileNavOpen((open) => !open), []);
@@ -41,10 +42,31 @@ export function useStorefrontNavigation() {
     return () => window.clearTimeout(timeout);
   }, [scrollToSection]);
 
+  useEffect(() => {
+    const updateHeaderTone = () => {
+      const hero = document.getElementById("shop");
+      if (!hero) {
+        setHeaderOnMedia(false);
+        return;
+      }
+      // Stay on-media while hero still covers the sticky header area
+      setHeaderOnMedia(hero.getBoundingClientRect().bottom > 96);
+    };
+
+    updateHeaderTone();
+    window.addEventListener("scroll", updateHeaderTone, { passive: true });
+    window.addEventListener("resize", updateHeaderTone);
+    return () => {
+      window.removeEventListener("scroll", updateHeaderTone);
+      window.removeEventListener("resize", updateHeaderTone);
+    };
+  }, []);
+
   return {
     mobileNavOpen,
     closeMobileNav,
     toggleMobileNav,
     scrollToSection,
+    headerOnMedia,
   };
 }
