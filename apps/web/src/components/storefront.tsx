@@ -248,7 +248,7 @@ export function Storefront({
           <div className="section-heading">
             <div>
               <p>Shop the drop</p>
-              <h2>Flavors made to reorder.</h2>
+              <h2>Flavors made to order.</h2>
             </div>
             <div className="filters" aria-label="Product filters">
               {[
