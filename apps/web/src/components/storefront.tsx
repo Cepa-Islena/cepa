@@ -1,8 +1,10 @@
 "use client";
 
 import type { CSSProperties, FormEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   ArrowRight,
+  Check,
   ChevronDown,
   Leaf,
   Menu,
@@ -328,8 +330,11 @@ export function Storefront({
           scrollToContact={() => {
             scrollToSection("contact");
             window.requestAnimationFrame(() => {
-              const topic = document.querySelector<HTMLSelectElement>('select[name="topic"]');
-              if (topic) topic.value = "outside-metro";
+              window.dispatchEvent(
+                new CustomEvent("cepa:set-contact-topic", {
+                  detail: { topic: "outside-metro", town: deliveryTown.trim() },
+                }),
+              );
               const message = document.querySelector<HTMLTextAreaElement>('textarea[name="message"]');
               if (message && !message.value.trim()) {
                 message.value = `Hola Cepa — estoy en ${deliveryTown.trim() || "___"} y quiero saber cuando llegan a mi pueblo.`;
@@ -816,6 +821,14 @@ function TestimonialsSection() {
   );
 }
 
+const CONTACT_TOPICS = [
+  { value: "events", label: "Events" },
+  { value: "outside-metro", label: "Outside metro" },
+  { value: "general", label: "General" },
+] as const;
+
+type ContactTopic = (typeof CONTACT_TOPICS)[number]["value"];
+
 function ContactSection({
   contactState,
   submitContact,
@@ -823,6 +836,47 @@ function ContactSection({
   contactState: ContactState;
   submitContact: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+  const [topic, setTopic] = useState<ContactTopic>("events");
+  const [topicOpen, setTopicOpen] = useState(false);
+  const topicWrapRef = useRef<HTMLDivElement | null>(null);
+  const listboxId = useId();
+  const selected = CONTACT_TOPICS.find((item) => item.value === topic) ?? CONTACT_TOPICS[0];
+
+  useEffect(() => {
+    const onSetTopic = (event: Event) => {
+      const detail = (event as CustomEvent<{ topic?: string }>).detail;
+      if (detail?.topic === "events" || detail?.topic === "outside-metro" || detail?.topic === "general") {
+        setTopic(detail.topic);
+        setTopicOpen(false);
+      }
+    };
+    window.addEventListener("cepa:set-contact-topic", onSetTopic as EventListener);
+    return () => window.removeEventListener("cepa:set-contact-topic", onSetTopic as EventListener);
+  }, []);
+
+  useEffect(() => {
+    if (!topicOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!topicWrapRef.current?.contains(event.target as Node)) setTopicOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setTopicOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [topicOpen]);
+
+  useEffect(() => {
+    if (contactState.status === "success") {
+      setTopic("events");
+      setTopicOpen(false);
+    }
+  }, [contactState.status]);
+
   return (
     <section className="contact-section" id="contact">
       <div>
@@ -840,16 +894,50 @@ function ContactSection({
             <input name="email" type="email" required maxLength={240} />
           </label>
         </div>
-        <label className="field-select">
-          <span>Topic</span>
-          <div className="select-shell">
-            <select name="topic" defaultValue="events">
-              <option value="events">Events</option>
-              <option value="outside-metro">Outside metro</option>
-              <option value="general">General</option>
-            </select>
-          </div>
-        </label>
+
+        <div className="field-select" ref={topicWrapRef}>
+          <span className="field-label" id={`${listboxId}-label`}>
+            Topic
+          </span>
+          <input type="hidden" name="topic" value={topic} />
+          <button
+            type="button"
+            className={`topic-trigger ${topicOpen ? "is-open" : ""}`}
+            aria-haspopup="listbox"
+            aria-expanded={topicOpen}
+            aria-controls={listboxId}
+            aria-labelledby={`${listboxId}-label`}
+            onClick={() => setTopicOpen((open) => !open)}
+          >
+            <span>{selected.label}</span>
+            <ChevronDown size={18} aria-hidden="true" />
+          </button>
+          {topicOpen ? (
+            <ul className="topic-menu" id={listboxId} role="listbox" aria-labelledby={`${listboxId}-label`}>
+              {CONTACT_TOPICS.map((item) => {
+                const active = item.value === topic;
+                return (
+                  <li key={item.value} role="presentation">
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      className={active ? "is-active" : undefined}
+                      onClick={() => {
+                        setTopic(item.value);
+                        setTopicOpen(false);
+                      }}
+                    >
+                      <span>{item.label}</span>
+                      {active ? <Check size={16} aria-hidden="true" /> : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
+
         <label>
           <span>Message</span>
           <textarea name="message" required maxLength={2000} rows={4} />
