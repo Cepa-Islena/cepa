@@ -6,19 +6,13 @@ import { isCommerceConfigured } from "@/lib/env";
 import { isMetroTown } from "@/lib/commerce";
 import { checkoutRequestSchema } from "@/lib/schemas";
 import { assertSameOrigin, getForwardedIp } from "@/lib/request-guards";
+import { reserveOrderInApp, type ReservationResult } from "@/lib/reserve-order";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getStripeClient } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
 const CHECKOUT_RATE_LIMIT_ERROR = "Too many checkout attempts. Please wait and try again.";
-
-type ReservationResult = {
-  order_id: string;
-  subtotal_cents: number;
-  total_cents: number;
-  reservation_expires_at: string;
-};
 
 type ReservedOrderItem = {
   product_slug: string;
@@ -94,21 +88,47 @@ export async function POST(request: Request) {
   const giftNoteFromCart = parsed.data.cartItems.find((item) => item.productSlug === "delivery-note")?.note;
   const giftNote = (parsed.data.giftNote || giftNoteFromCart || "").trim();
 
-  const { data: reservation, error: reservationError } = await supabase
-    .rpc("reserve_order", {
-      cart_items: parsed.data.cartItems.map(({ productSlug, quantity }) => ({ productSlug, quantity })),
-      delivery_pueblo: parsed.data.deliveryPueblo,
-      customer_email: parsed.data.customerEmail || null,
-      customer_name: parsed.data.customerName,
-      customer_phone: parsed.data.customerPhone,
-      delivery_address: parsed.data.deliveryAddress,
-      delivery_notes: parsed.data.deliveryNotes || null,
-      gift_note: giftNote || null,
-    })
+  const cartLines = parsed.data.cartItems.map(({ productSlug, quantity }) => ({ productSlug, quantity }));
+  const reserveArgs = {
+    cart_items: cartLines,
+    delivery_pueblo: parsed.data.deliveryPueblo,
+    customer_email: parsed.data.customerEmail || null,
+    customer_name: parsed.data.customerName,
+    customer_phone: parsed.data.customerPhone,
+    delivery_address: parsed.data.deliveryAddress,
+    delivery_notes: parsed.data.deliveryNotes || null,
+    gift_note: giftNote || null,
+  };
+
+  let reservation: ReservationResult | null = null;
+
+  const { data: rpcReservation, error: reservationError } = await supabase
+    .rpc("reserve_order", reserveArgs)
     .single<ReservationResult>();
 
-  if (reservationError || !reservation) {
-    return NextResponse.json({ error: reservationError?.message ?? "Could not reserve this cart." }, { status: 409 });
+  if (!reservationError && rpcReservation) {
+    reservation = rpcReservation;
+  } else {
+    // Soft-launch bridge while DB reserve_order has ambiguous column bug.
+    const fallback = await reserveOrderInApp(supabase, {
+      cartItems: cartLines,
+      deliveryPueblo: parsed.data.deliveryPueblo,
+      customerEmail: parsed.data.customerEmail || null,
+      customerName: parsed.data.customerName,
+      customerPhone: parsed.data.customerPhone,
+      deliveryAddress: parsed.data.deliveryAddress,
+      deliveryNotes: parsed.data.deliveryNotes || null,
+      giftNote: giftNote || null,
+    });
+
+    if (!fallback.data) {
+      return NextResponse.json(
+        { error: fallback.error ?? reservationError?.message ?? "Could not reserve this cart." },
+        { status: 409 },
+      );
+    }
+
+    reservation = fallback.data;
   }
 
   let checkoutSessionId: string | null = null;
