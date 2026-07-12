@@ -289,7 +289,7 @@ export function Storefront({
           </div>
           <div className="bundle-copy">
             <p>Best first buy</p>
-            <h2>MVP Sample Bundle</h2>
+            <h2>Sample Bundle</h2>
             <span className="price-lockup">$22 · 5 flavors</span>
             <p>One pack. Every launch flavor. The easiest way to fall in love with Cepa.</p>
             <ul>
@@ -525,7 +525,7 @@ function Spotlight({ product, addToCart }: { product: Product; addToCart: (produ
           </p>
         ) : (
           <p className="ingredient-line">
-            <strong>Allergens:</strong> none listed for this MVP recipe — ask if you have concerns.
+            <strong>Allergens:</strong> none listed for this recipe — ask if you have concerns.
           </p>
         )}
         <div className="spotlight-tags">
@@ -577,8 +577,7 @@ function SubscriptionSection({ addToCart }: { addToCart: (productSlug: string) =
         <p>Events + subscriptions</p>
         <h2>Easy buying now. Subscriptions next.</h2>
         <p>
-          For MVP, weekly packs work like one-time drops. Later, Stripe subscriptions can power recurring delivery
-          without changing the customer-facing flow.
+          Buy one drop at a time for now. Recurring subscriptions are coming next — same metro delivery, less thinking.
         </p>
       </div>
       <div className="subscription-actions">
@@ -632,8 +631,8 @@ function DeliverySection({
         <p>Delivery</p>
         <h2>Metro pueblos first.</h2>
         <p>
-          For the MVP, delivery stays close so bottles arrive fresh. Outside metro San Juan, we’re working on getting
-          the juice to you.
+          Delivery stays close so bottles arrive fresh. Outside metro San Juan, we’re working on getting the juice to
+          you.
         </p>
       </div>
       <div className={`delivery-checker ${statusClass}`}>
@@ -1059,7 +1058,7 @@ function CartDrawer({
         {!cart.length ? (
           <div className="empty-cart">
             <img src="/brand/corillo-pulpa-scene.png" alt="" />
-            <p>Start with a juice, a shot, or the MVP sample bundle.</p>
+            <p>Start with a juice, a shot, or the sample bundle.</p>
             <a className="button primary wide" href="#products" onClick={close}>
               Continue shopping
             </a>

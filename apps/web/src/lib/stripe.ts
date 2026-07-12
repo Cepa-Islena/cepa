@@ -10,8 +10,8 @@ export function getStripeClient() {
   stripeClient ??= new Stripe(key, {
     apiVersion: "2026-05-27.dahlia",
     appInfo: {
-      name: "Cepa Isleña MVP",
-      version: "0.1.0",
+      name: "Cepa Isleña",
+      version: "1.0.0",
     },
   });
 

@@ -16,7 +16,7 @@ export default function DeliveryPage() {
       <p className="legal-updated">Last updated: July 11, 2026</p>
 
       <h2>Service area</h2>
-      <p>MVP delivery is limited to these metro pueblos:</p>
+      <p>Delivery is currently limited to these metro pueblos:</p>
       <ul>
         {metroPueblos.map((pueblo) => (
           <li key={pueblo}>{pueblo}</li>
@@ -26,8 +26,8 @@ export default function DeliveryPage() {
 
       <h2>Order size</h2>
       <p>
-        There is no minimum order size for this MVP. You can buy a single bottle, shot, bundle, or mix. Delivery timing
-        still depends on drop production and route density.
+        There is no minimum order size. You can buy a single bottle, shot, bundle, or mix. Delivery timing still depends
+        on drop production and route density.
       </p>
 
       <h2>What you need to provide</h2>

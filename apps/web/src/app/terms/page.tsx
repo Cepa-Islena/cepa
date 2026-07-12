@@ -33,7 +33,7 @@ export default function TermsPage() {
 
       <h2>Delivery area</h2>
       <p>
-        MVP delivery is limited to selected metro pueblos listed on the storefront. Outside those areas, use the contact
+        Delivery is limited to selected metro pueblos listed on the storefront. Outside those areas, use the contact
         form. You are responsible for providing an accurate delivery address and reachable phone number.
       </p>
 
@@ -52,8 +52,8 @@ export default function TermsPage() {
 
       <h2>Allergens</h2>
       <p>
-        Ingredient lists on the site are informational for the current MVP recipes. Facilities, suppliers, and recipes
-        can change. If you have allergies or sensitivities, contact us before ordering.
+        Ingredient lists on the site are informational for current recipes. Facilities, suppliers, and recipes can
+        change. If you have allergies or sensitivities, contact us before ordering.
       </p>
 
       <h2>Acceptable use</h2>
