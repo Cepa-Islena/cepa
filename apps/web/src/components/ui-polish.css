@@ -630,7 +630,7 @@ body:has(.cepa-store) {
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--line);
+  border-top: 0;
   background: #fff;
 }
 
