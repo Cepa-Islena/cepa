@@ -49,21 +49,21 @@ body:has(.cepa-store) {
   opacity: 0.45;
 }
 
-/* Centered compact header — not edge-to-edge spread */
+/* Centered compact header — logo truly centered, navs balanced */
 .cepa-store .site-header {
   position: sticky;
   top: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: auto auto 1fr auto;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  column-gap: clamp(0.75rem, 2vw, 1.35rem);
+  column-gap: clamp(0.75rem, 2vw, 1.5rem);
   row-gap: 0.5rem;
-  min-height: 68px;
+  min-height: 84px;
   width: 100%;
   max-width: none;
   margin-inline: 0;
-  padding: 0.55rem max(0.9rem, calc((100% - 1120px) / 2));
+  padding: 0.65rem max(0.9rem, calc((100% - 1180px) / 2));
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -98,12 +98,16 @@ body:has(.cepa-store) {
 
 .cepa-store .brand-mark {
   grid-column: 2;
-  justify-self: start;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  line-height: 0;
 }
 
 .cepa-store .brand-mark img {
-  width: min(128px, 34vw);
+  width: min(220px, 46vw);
   height: auto;
+  display: block;
   transition: filter 0.2s ease;
 }
 
@@ -112,7 +116,7 @@ body:has(.cepa-store) {
 }
 
 .cepa-store .header-right {
-  grid-column: 4;
+  grid-column: 3;
   justify-self: end;
   display: flex;
   align-items: center;
@@ -195,8 +199,8 @@ body:has(.cepa-store) {
   display: grid;
   grid-template-columns: 1fr;
   min-height: min(92vh, 900px);
-  margin-top: -68px;
-  padding-top: 68px;
+  margin-top: -84px;
+  padding-top: 84px;
   border: 0;
   border-bottom: 1px solid var(--line);
   background: var(--borra);
@@ -1083,6 +1087,10 @@ body:has(.cepa-store) {
     justify-self: center;
   }
 
+  .cepa-store .brand-mark img {
+    width: min(168px, 48vw);
+  }
+
   .cepa-store .header-right {
     grid-column: 3;
   }
@@ -1094,8 +1102,8 @@ body:has(.cepa-store) {
 
   .cepa-store .shop-hero {
     min-height: min(78vh, 720px);
-    margin-top: -64px;
-    padding-top: 64px;
+    margin-top: -76px;
+    padding-top: 76px;
   }
 
   .cepa-store .hero-copy {
