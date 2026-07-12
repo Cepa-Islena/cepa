@@ -27,14 +27,24 @@ type ZoneRow = {
 type ComponentRow = {
   ounces: number;
   recipe_id: string;
-  recipes: {
-    id: string;
-    slug: string;
-    name: string;
-    total_capacity_oz: number;
-    reserved_capacity_oz: number;
-    sold_capacity_oz: number;
-  } | null;
+  recipes:
+    | {
+        id: string;
+        slug: string;
+        name: string;
+        total_capacity_oz: number;
+        reserved_capacity_oz: number;
+        sold_capacity_oz: number;
+      }
+    | {
+        id: string;
+        slug: string;
+        name: string;
+        total_capacity_oz: number;
+        reserved_capacity_oz: number;
+        sold_capacity_oz: number;
+      }[]
+    | null;
 };
 
 /**
@@ -139,11 +149,11 @@ export async function reserveOrderInApp(
           throw new Error(componentsError.message);
         }
 
-        const typedComponents = (components ?? []) as ComponentRow[];
+        const typedComponents = (components ?? []) as unknown as ComponentRow[];
         const componentsSnapshot: Array<Record<string, unknown>> = [];
 
         for (const component of typedComponents) {
-          const recipe = component.recipes;
+          const recipe = Array.isArray(component.recipes) ? component.recipes[0] : component.recipes;
           if (!recipe) continue;
 
           const available =
@@ -218,7 +228,7 @@ export async function reserveOrderInApp(
         error: null,
       };
     } catch (error) {
-      await supabase.rpc("release_order_reservation", { target_order_id: order.id }).catch(() => undefined);
+      await supabase.rpc("release_order_reservation", { target_order_id: order.id });
       return {
         data: null,
         error: error instanceof Error ? error.message : "Could not reserve this cart.",
