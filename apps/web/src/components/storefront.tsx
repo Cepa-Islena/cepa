@@ -621,17 +621,20 @@ function DeliverySection({
         : "Not in metro yet — we’re still expanding.";
   const statusBody =
     metro === null
-      ? "MVP delivery is metro San Juan only so bottles arrive fresh."
+      ? "Right now we deliver metro San Juan only. Outside that zone? We’re working on getting the juice to you."
       : metro
         ? "We can deliver to your area on drop day. Add juices and check out when ready."
-        : "We don’t deliver there yet. Leave your pueblo in Contact and we’ll prioritize the next routes.";
+        : "We don’t deliver there yet, but we’re working on getting the juice to you. Leave your pueblo in Contact and we’ll prioritize the next routes.";
 
   return (
     <section className="delivery-section" id="delivery">
       <div>
         <p>Delivery</p>
         <h2>Metro pueblos first.</h2>
-        <p>For the MVP, delivery stays close so the product arrives fresh and the process stays manageable.</p>
+        <p>
+          For the MVP, delivery stays close so bottles arrive fresh. Outside metro San Juan, we’re working on getting
+          the juice to you.
+        </p>
       </div>
       <div className={`delivery-checker ${statusClass}`}>
         <label htmlFor="town-search">Where are you ordering from?</label>
