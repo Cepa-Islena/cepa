@@ -153,6 +153,7 @@ export async function POST(request: Request) {
     const deliveryFeeCents = reservation.total_cents - reservation.subtotal_cents;
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = typedReservedItems.map((item) => {
       const product = findProduct(item.product_slug);
+      const brandLogo = `${origin}/brand/logo-borra.png`;
 
       return {
         quantity: item.quantity,
@@ -162,7 +163,8 @@ export async function POST(request: Request) {
           product_data: {
             name: item.product_name,
             description: product?.size ?? "Cepa order item",
-            images: product ? [`${origin}${product.image}`] : undefined,
+            // Brand logo on Stripe Checkout (not product mascot art).
+            images: [brandLogo],
             metadata: {
               product_slug: item.product_slug,
             },
@@ -180,6 +182,7 @@ export async function POST(request: Request) {
           product_data: {
             name: "Metro delivery",
             description: `Delivery to ${parsed.data.deliveryPueblo}`,
+            images: [`${origin}/brand/logo-borra.png`],
             metadata: {
               delivery_pueblo: parsed.data.deliveryPueblo,
             },
