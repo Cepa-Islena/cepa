@@ -1011,20 +1011,25 @@ function CartDrawer({
               <p className="cart-why-info">
                 Just what we need for delivery: name, phone, pueblo, and address. Receipt email is optional.
               </p>
-              <label className="drawer-email">
+              <label className="drawer-email cart-pueblo-field">
                 <span>Delivery pueblo</span>
-                <select
-                  value={deliveryTown}
-                  required
-                  onChange={(event) => setDeliveryTown(event.target.value)}
-                  aria-label="Delivery pueblo"
-                >
-                  {metroPueblos.map((town) => (
-                    <option key={town} value={town}>
-                      {town}
-                    </option>
-                  ))}
-                </select>
+                <div className="cart-pueblo-chips" role="listbox" aria-label="Delivery pueblo">
+                  {metroPueblos.map((town) => {
+                    const active = normalizeChipActive(deliveryTown, town);
+                    return (
+                      <button
+                        key={town}
+                        type="button"
+                        role="option"
+                        aria-selected={active}
+                        className={active ? "active" : undefined}
+                        onClick={() => setDeliveryTown(town)}
+                      >
+                        {town}
+                      </button>
+                    );
+                  })}
+                </div>
               </label>
               <label className="drawer-email">
                 <span>Name</span>
