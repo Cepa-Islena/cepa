@@ -211,7 +211,7 @@ export function Storefront({
           <div className="editorial-band-inner">
             <h2>“Pleasure to be sipped by you.”</h2>
             <p>
-              Begin with Cepa — small-batch juices and shots pressed for the corillo. Fresh flavor first, island
+              Begin with Cepa, small-batch juices and shots pressed for the corillo. Fresh flavor first, island
               character always.
             </p>
             <a className="button primary" href="#products">
