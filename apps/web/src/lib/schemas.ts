@@ -8,8 +8,15 @@ export const checkoutItemSchema = z.object({
 
 export const checkoutRequestSchema = z.object({
   cartItems: z.array(checkoutItemSchema).min(1).max(20),
-  deliveryPueblo: z.string().min(1).max(80),
-  customerEmail: z.email().optional().or(z.literal("")),
+  deliveryPueblo: z.string().trim().min(1, "Delivery pueblo is required").max(80),
+  customerEmail: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .refine((value) => !value || z.email().safeParse(value).success, {
+      message: "Enter a valid email or leave it blank",
+    }),
   customerName: z.string().trim().min(1).max(120),
   customerPhone: z.string().trim().min(7).max(40),
   deliveryAddress: z.string().trim().min(5).max(240),

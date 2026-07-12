@@ -27,7 +27,20 @@ export async function createCheckoutSession(input: CheckoutSessionInput) {
   const response = await fetch("/api/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      cartItems: input.cartItems.map(({ productSlug, quantity, note }) => ({
+        productSlug,
+        quantity,
+        ...(note ? { note } : {}),
+      })),
+      deliveryPueblo: input.deliveryPueblo.trim(),
+      customerEmail: input.customerEmail.trim(),
+      customerName: input.customerName.trim(),
+      customerPhone: input.customerPhone.trim(),
+      deliveryAddress: input.deliveryAddress.trim(),
+      deliveryNotes: input.deliveryNotes?.trim() ?? "",
+      giftNote: input.giftNote?.trim() ?? "",
+    }),
   });
   const payload = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
 

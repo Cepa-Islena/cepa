@@ -4,7 +4,7 @@ import { useState } from "react";
 import { isMetroTown } from "@/lib/commerce";
 
 export function useDeliveryChecker() {
-  const [deliveryTown, setDeliveryTown] = useState("");
+  const [deliveryTown, setDeliveryTown] = useState("San Juan");
   const trimmed = deliveryTown.trim();
   const metro = trimmed ? isMetroTown(deliveryTown) : null;
 

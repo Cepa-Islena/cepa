@@ -1050,7 +1050,8 @@ a {
 .admin-form input,
 .admin-form select,
 .admin-form textarea,
-.drawer-email input {
+.drawer-email input,
+.drawer-email select {
   width: 100%;
   border: 1px solid var(--borra);
   border-radius: 0;
@@ -1072,7 +1073,8 @@ a {
 .admin-form input:focus,
 .admin-form select:focus,
 .admin-form textarea:focus,
-.drawer-email input:focus {
+.drawer-email input:focus,
+.drawer-email select:focus {
   box-shadow: 0 0 0 3px rgba(202, 205, 58, 0.45);
 }
 
@@ -1451,7 +1453,7 @@ a {
   align-items: start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.25rem;
+  padding: 1.35rem 1.4rem 1.15rem;
   border-bottom: 1px solid var(--borra);
 }
 
@@ -1463,19 +1465,20 @@ a {
 .cart-header p {
   color: var(--ink-soft);
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .cart-header h2 {
-  margin-top: 0.2rem;
+  margin-top: 0.35rem;
   font-family: "New Spirit Cepa", Georgia, serif;
-  font-size: 2.5rem;
+  font-size: clamp(2.1rem, 7vw, 2.5rem);
   line-height: 1;
 }
 
 .empty-cart {
   display: grid;
   gap: 1.2rem;
-  padding: 1.25rem;
+  padding: 1.25rem 1.4rem;
 }
 
 .empty-cart img {
@@ -1490,9 +1493,20 @@ a {
 .cart-progress {
   display: grid;
   gap: 0.55rem;
-  padding: 1rem 1.25rem;
+  padding: 0.95rem 1.4rem;
   border-bottom: 1px solid var(--borra);
   text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.cart-progress.calm-cart-note span {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .cart-items {
@@ -1616,7 +1630,7 @@ a {
 .cart-footer {
   display: grid;
   gap: 0.8rem;
-  padding: 1.15rem 1.25rem;
+  padding: 1.2rem 1.4rem calc(1.2rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--borra);
 }
 

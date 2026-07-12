@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { CartItem } from "@/lib/catalog";
+import { isMetroTown } from "@/lib/commerce";
 import { createCheckoutSession } from "@/lib/storefront-api";
 
 export type CheckoutState =
@@ -41,13 +42,25 @@ export function useStorefrontCheckout(commerceConfigured: boolean) {
         return;
       }
 
+      if (!deliveryTown.trim() || !isMetroTown(deliveryTown)) {
+        setCheckoutState({
+          status: "error",
+          message: "Pick a metro pueblo so we know where to deliver.",
+        });
+        return;
+      }
+
       setCheckoutState({ status: "loading", message: "Validating cart and reserving capacity..." });
 
       try {
         const { url } = await createCheckoutSession({
-          cartItems: cart,
-          deliveryPueblo: deliveryTown,
-          customerEmail,
+          cartItems: cart.map(({ productSlug, quantity, note }) => ({
+            productSlug,
+            quantity,
+            ...(note ? { note } : {}),
+          })),
+          deliveryPueblo: deliveryTown.trim(),
+          customerEmail: customerEmail.trim(),
           customerName: customerName.trim(),
           customerPhone: customerPhone.trim(),
           deliveryAddress: deliveryAddress.trim(),

@@ -352,6 +352,8 @@ export function Storefront({
         lines={lines}
         total={total}
         bottles={bottles}
+        deliveryTown={deliveryTown}
+        setDeliveryTown={setDeliveryTown}
         customerEmail={customerEmail}
         setCustomerEmail={setCustomerEmail}
         customerName={customerName}
@@ -884,6 +886,8 @@ function CartDrawer({
   lines,
   total,
   bottles,
+  deliveryTown,
+  setDeliveryTown,
   customerEmail,
   setCustomerEmail,
   customerName,
@@ -908,6 +912,8 @@ function CartDrawer({
   lines: CartLine[];
   total: number;
   bottles: number;
+  deliveryTown: string;
+  setDeliveryTown: (value: string) => void;
   customerEmail: string;
   setCustomerEmail: (value: string) => void;
   customerName: string;
@@ -1003,8 +1009,23 @@ function CartDrawer({
             </div>
             <div className="cart-footer">
               <p className="cart-why-info">
-                Just what we need for delivery: name, phone, and address. Receipt email is optional.
+                Just what we need for delivery: name, phone, pueblo, and address. Receipt email is optional.
               </p>
+              <label className="drawer-email">
+                <span>Delivery pueblo</span>
+                <select
+                  value={deliveryTown}
+                  required
+                  onChange={(event) => setDeliveryTown(event.target.value)}
+                  aria-label="Delivery pueblo"
+                >
+                  {metroPueblos.map((town) => (
+                    <option key={town} value={town}>
+                      {town}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className="drawer-email">
                 <span>Name</span>
                 <input
