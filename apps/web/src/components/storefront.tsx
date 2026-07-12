@@ -344,7 +344,7 @@ export function Storefront({
         <ContactSection contactState={contactState} submitContact={submitContact} />
       </main>
 
-      <Footer catalogSource={catalogSource} />
+      <Footer />
       <CartDrawer
         cartOpen={cartOpen}
         cart={cart}
@@ -957,14 +957,14 @@ function ContactSection({
   );
 }
 
-function Footer({ catalogSource }: { catalogSource: "supabase" | "static" }) {
+function Footer() {
   return (
     <footer className="footer">
       <div>
         <img src="/brand/logo-borra.png" alt="Cepa Isleña" />
         <p>Jugos verdes y shots hechos con frutas, manos y mucha intención.</p>
         <p className="legal-note">
-          Not medical advice. Ingredient lists describe current MVP recipes and may change. Catalog source: {catalogSource}.
+          Ingredient lists describe current recipes and may change by drop. Questions? Contact us.
         </p>
       </div>
       <nav aria-label="Footer navigation">
