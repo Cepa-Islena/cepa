@@ -886,6 +886,24 @@ body:has(.cepa-store) {
   min-height: 42px;
   border-radius: 999px;
   padding-inline: 1rem;
+  font-weight: 600;
+}
+
+/* Delivery cards are light — never inherit hero "secondary" cream text */
+.cepa-store .delivery-result .button.primary,
+.cepa-store .delivery-result .button.secondary,
+.cepa-store .delivery-result a.button {
+  background: var(--borra);
+  color: var(--pulpa);
+  border: 1px solid var(--borra);
+}
+
+.cepa-store .delivery-result .button.primary:hover,
+.cepa-store .delivery-result .button.secondary:hover,
+.cepa-store .delivery-result a.button:hover {
+  background: var(--lima);
+  color: var(--borra);
+  border-color: var(--lima);
 }
 
 .cepa-store .delivery-metro-list {

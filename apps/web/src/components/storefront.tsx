@@ -658,7 +658,7 @@ function DeliverySection({
           ) : null}
           {metro === true ? (
             <a
-              className="button secondary delivery-cta"
+              className="button primary delivery-cta"
               href="#products"
               onClick={(event) => {
                 event.preventDefault();
