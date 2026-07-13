@@ -25,6 +25,18 @@ export type OrderEmailPayload = {
   items: OrderEmailItem[];
 };
 
+export type ContactEmailPayload = {
+  id: string;
+  name: string;
+  email: string;
+  topic: string;
+  message: string;
+};
+
+type SupabaseLike = {
+  from: (table: string) => any;
+};
+
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -99,7 +111,7 @@ function buildOwnerHtml(order: OrderEmailPayload) {
 }
 
 function buildOwnerText(order: OrderEmailPayload) {
-  const lines = [
+  return [
     "New paid Cepa order",
     "",
     `Customer: ${order.customerName || "—"}`,
@@ -110,17 +122,15 @@ function buildOwnerText(order: OrderEmailPayload) {
     `Notes: ${order.deliveryNotes || "—"}`,
     order.giftNote ? `Gift note: ${order.giftNote}` : null,
     "",
-    ...order.items.map(
-      (item) => `${item.product_name} x${item.quantity} — ${formatMoney(item.total_amount_cents)}`,
-    ),
+    ...order.items.map((item) => `${item.product_name} x${item.quantity} — ${formatMoney(item.total_amount_cents)}`),
     "",
     `Subtotal: ${formatMoney(order.subtotalCents)}`,
     `Delivery: ${formatMoney(order.deliveryFeeCents)}`,
     `Total: ${formatMoney(order.totalCents)}`,
     `Order ID: ${order.orderId}`,
-  ].filter(Boolean);
-
-  return lines.join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 async function sendResendEmail(input: {
@@ -132,7 +142,7 @@ async function sendResendEmail(input: {
 }) {
   const apiKey = getResendApiKey();
   if (!apiKey) {
-    return { ok: false as const, skipped: true as const, error: "RESEND_API_KEY is not configured" };
+    return { ok: false as const, skipped: true as const, error: "RESEND_API_KEY is not configured", id: null };
   }
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -158,10 +168,49 @@ async function sendResendEmail(input: {
       ok: false as const,
       skipped: false as const,
       error: payload?.message || `Resend error ${response.status}`,
+      id: null,
     };
   }
 
-  return { ok: true as const, skipped: false as const, id: payload?.id || null };
+  return { ok: true as const, skipped: false as const, id: payload?.id || null, error: null };
+}
+
+/** Claim a unique notification slot. Returns false if already sent/claimed. */
+export async function claimNotification(
+  supabase: SupabaseLike,
+  kind: string,
+  referenceId: string,
+  recipient: string,
+) {
+  const { error } = await supabase.from("notification_log").insert({
+    kind,
+    reference_id: referenceId,
+    recipient,
+    status: "pending",
+  });
+
+  if (!error) return true;
+  if (error.code === "23505") return false;
+  // If table missing, allow send attempt (best-effort, may double).
+  return true;
+}
+
+export async function completeNotification(
+  supabase: SupabaseLike,
+  kind: string,
+  referenceId: string,
+  result: { ok: boolean; id?: string | null; error?: string | null; skipped?: boolean },
+) {
+  const status = result.skipped ? "skipped" : result.ok ? "sent" : "failed";
+  await supabase
+    .from("notification_log")
+    .update({
+      status,
+      provider_message_id: result.id ?? null,
+      error: result.error ?? null,
+    })
+    .eq("kind", kind)
+    .eq("reference_id", referenceId);
 }
 
 export async function sendOwnerOrderEmail(order: OrderEmailPayload) {
@@ -181,12 +230,12 @@ export async function sendOwnerOrderEmail(order: OrderEmailPayload) {
 export async function sendCustomerOrderEmail(order: OrderEmailPayload) {
   const email = order.customerEmail?.trim();
   if (!email) {
-    return { ok: false as const, skipped: true as const, error: "No customer email" };
+    return { ok: false as const, skipped: true as const, error: "No customer email", id: null };
   }
 
   const total = formatMoney(order.totalCents);
   const itemLines = order.items
-    .map((item) => `${item.product_name} × ${item.quantity} — ${formatMoney(item.total_amount_cents)}`)
+    .map((item) => `${escapeHtml(item.product_name)} × ${item.quantity} — ${formatMoney(item.total_amount_cents)}`)
     .join("<br/>");
 
   const html = `
@@ -217,10 +266,62 @@ export async function sendCustomerOrderEmail(order: OrderEmailPayload) {
   });
 }
 
+export async function sendOwnerContactEmail(message: ContactEmailPayload) {
+  const owner = getOrderNotifyEmail();
+  const html = `
+  <div style="font-family:Georgia,serif;color:#3a2418;max-width:560px;margin:0 auto;line-height:1.5;">
+    <p style="text-transform:uppercase;letter-spacing:0.08em;font-size:12px;color:#7a6658;">Contact form</p>
+    <h1 style="font-size:28px;margin:0 0 12px;">New message</h1>
+    <p style="margin:0 0 8px;"><strong>${escapeHtml(message.name)}</strong> · ${escapeHtml(message.email)}</p>
+    <p style="margin:0 0 12px;"><strong>Topic:</strong> ${escapeHtml(message.topic)}</p>
+    <div style="background:#f7f3ea;border:1px solid #d9d0bf;padding:16px;white-space:pre-wrap;">${escapeHtml(message.message)}</div>
+  </div>`;
+
+  const text = [
+    "New contact message",
+    `From: ${message.name} <${message.email}>`,
+    `Topic: ${message.topic}`,
+    "",
+    message.message,
+  ].join("\n");
+
+  return sendResendEmail({
+    to: owner,
+    subject: `Cepa contact · ${message.topic} · ${message.name}`,
+    html,
+    text,
+    replyTo: message.email,
+  });
+}
+
+export async function notifyPaidOrder(supabase: SupabaseLike, order: OrderEmailPayload) {
+  const owner = getOrderNotifyEmail();
+  const ownerKind = "order_paid_owner";
+  const customerKind = "order_paid_customer";
+
+  if (await claimNotification(supabase, ownerKind, order.orderId, owner)) {
+    const result = await sendOwnerOrderEmail(order);
+    await completeNotification(supabase, ownerKind, order.orderId, result);
+  }
+
+  if (order.customerEmail?.trim()) {
+    if (await claimNotification(supabase, customerKind, order.orderId, order.customerEmail.trim())) {
+      const result = await sendCustomerOrderEmail(order);
+      await completeNotification(supabase, customerKind, order.orderId, result);
+    }
+  }
+}
+
+export async function notifyContactMessage(supabase: SupabaseLike, message: ContactEmailPayload) {
+  const owner = getOrderNotifyEmail();
+  const kind = "contact_owner";
+  if (!(await claimNotification(supabase, kind, message.id, owner))) return;
+  const result = await sendOwnerContactEmail(message);
+  await completeNotification(supabase, kind, message.id, result);
+}
+
 export async function loadOrderEmailPayload(
-  supabase: {
-    from: (table: string) => any;
-  },
+  supabase: SupabaseLike,
   orderId: string,
 ): Promise<OrderEmailPayload | null> {
   const { data: order, error: orderError } = await supabase

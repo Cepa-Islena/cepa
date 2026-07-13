@@ -6,7 +6,7 @@ import { isCommerceConfigured } from "@/lib/env";
 import { isMetroTown } from "@/lib/commerce";
 import { checkoutRequestSchema } from "@/lib/schemas";
 import { assertSameOrigin, getForwardedIp } from "@/lib/request-guards";
-import { reserveOrderInApp, type ReservationResult } from "@/lib/reserve-order";
+import type { ReservationResult } from "@/lib/reserve-order";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getStripeClient } from "@/lib/stripe";
 
@@ -87,12 +87,13 @@ export async function POST(request: Request) {
 
   const giftNoteFromCart = parsed.data.cartItems.find((item) => item.productSlug === "delivery-note")?.note;
   const giftNote = (parsed.data.giftNote || giftNoteFromCart || "").trim();
+  const customerEmail = parsed.data.customerEmail.trim();
 
   const cartLines = parsed.data.cartItems.map(({ productSlug, quantity }) => ({ productSlug, quantity }));
   const reserveArgs = {
     cart_items: cartLines,
     delivery_pueblo: parsed.data.deliveryPueblo,
-    customer_email: parsed.data.customerEmail || null,
+    customer_email: customerEmail,
     customer_name: parsed.data.customerName,
     customer_phone: parsed.data.customerPhone,
     delivery_address: parsed.data.deliveryAddress,
@@ -100,35 +101,16 @@ export async function POST(request: Request) {
     gift_note: giftNote || null,
   };
 
-  let reservation: ReservationResult | null = null;
-
-  const { data: rpcReservation, error: reservationError } = await supabase
+  // Atomic DB reservation only (no non-transactional app fallback).
+  const { data: reservation, error: reservationError } = await supabase
     .rpc("reserve_order", reserveArgs)
     .single<ReservationResult>();
 
-  if (!reservationError && rpcReservation) {
-    reservation = rpcReservation;
-  } else {
-    // Soft-launch bridge while DB reserve_order has ambiguous column bug.
-    const fallback = await reserveOrderInApp(supabase, {
-      cartItems: cartLines,
-      deliveryPueblo: parsed.data.deliveryPueblo,
-      customerEmail: parsed.data.customerEmail || null,
-      customerName: parsed.data.customerName,
-      customerPhone: parsed.data.customerPhone,
-      deliveryAddress: parsed.data.deliveryAddress,
-      deliveryNotes: parsed.data.deliveryNotes || null,
-      giftNote: giftNote || null,
-    });
-
-    if (!fallback.data) {
-      return NextResponse.json(
-        { error: fallback.error ?? reservationError?.message ?? "Could not reserve this cart." },
-        { status: 409 },
-      );
-    }
-
-    reservation = fallback.data;
+  if (reservationError || !reservation) {
+    return NextResponse.json(
+      { error: reservationError?.message ?? "Could not reserve this cart." },
+      { status: 409 },
+    );
   }
 
   let checkoutSessionId: string | null = null;
@@ -151,9 +133,9 @@ export async function POST(request: Request) {
     }
 
     const deliveryFeeCents = reservation.total_cents - reservation.subtotal_cents;
+    const brandLogo = `${origin}/brand/logo-borra.png`;
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = typedReservedItems.map((item) => {
       const product = findProduct(item.product_slug);
-      const brandLogo = `${origin}/brand/logo-borra.png`;
 
       return {
         quantity: item.quantity,
@@ -163,7 +145,6 @@ export async function POST(request: Request) {
           product_data: {
             name: item.product_name,
             description: product?.size ?? "Cepa order item",
-            // Brand logo on Stripe Checkout (not product mascot art).
             images: [brandLogo],
             metadata: {
               product_slug: item.product_slug,
@@ -182,7 +163,7 @@ export async function POST(request: Request) {
           product_data: {
             name: "Metro delivery",
             description: `Delivery to ${parsed.data.deliveryPueblo}`,
-            images: [`${origin}/brand/logo-borra.png`],
+            images: [brandLogo],
             metadata: {
               delivery_pueblo: parsed.data.deliveryPueblo,
             },
@@ -194,7 +175,7 @@ export async function POST(request: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       client_reference_id: reservation.order_id,
-      customer_email: parsed.data.customerEmail || undefined,
+      customer_email: customerEmail,
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout/cancel?order_id=${reservation.order_id}`,
       metadata: {
@@ -205,6 +186,12 @@ export async function POST(request: Request) {
       },
       line_items: lineItems,
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+      payment_intent_data: {
+        receipt_email: customerEmail,
+        metadata: {
+          order_id: reservation.order_id,
+        },
+      },
     });
     checkoutSessionId = session.id;
 
@@ -218,6 +205,7 @@ export async function POST(request: Request) {
         status: "checkout_created",
         stripe_checkout_session_id: session.id,
         total_cents: reservation.total_cents,
+        customer_email: customerEmail,
       })
       .eq("id", reservation.order_id);
 

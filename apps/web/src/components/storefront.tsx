@@ -1009,7 +1009,7 @@ function CartDrawer({
             </div>
             <div className="cart-footer">
               <p className="cart-why-info">
-                Just what we need for delivery: name, phone, pueblo, and address. Receipt email is optional.
+                Name, phone, pueblo, address, and email for updates/receipt.
               </p>
               <label className="drawer-email cart-pueblo-field">
                 <span>Delivery pueblo</span>
@@ -1074,11 +1074,12 @@ function CartDrawer({
                 />
               </label>
               <label className="drawer-email">
-                <span>Email for receipt (optional)</span>
+                <span>Email for receipt & updates</span>
                 <input
                   type="email"
                   value={customerEmail}
                   placeholder="you@example.com"
+                  required
                   autoComplete="email"
                   onChange={(event) => setCustomerEmail(event.target.value)}
                 />

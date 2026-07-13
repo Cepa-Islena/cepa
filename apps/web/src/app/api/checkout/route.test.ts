@@ -217,6 +217,7 @@ describe("checkout route", () => {
       status: "checkout_created",
       stripe_checkout_session_id: "cs_test_123",
       total_cents: 900,
+      customer_email: "cliente@example.com",
     });
   });
 

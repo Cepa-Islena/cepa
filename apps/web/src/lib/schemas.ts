@@ -12,10 +12,9 @@ export const checkoutRequestSchema = z.object({
   customerEmail: z
     .string()
     .trim()
-    .optional()
-    .or(z.literal(""))
-    .refine((value) => !value || z.email().safeParse(value).success, {
-      message: "Enter a valid email or leave it blank",
+    .min(1, "Email is required for order updates and receipts")
+    .refine((value) => z.email().safeParse(value).success, {
+      message: "Enter a valid email",
     }),
   customerName: z.string().trim().min(1).max(120),
   customerPhone: z.string().trim().min(7).max(40),

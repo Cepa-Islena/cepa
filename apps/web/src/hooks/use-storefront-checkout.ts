@@ -37,7 +37,15 @@ export function useStorefrontCheckout(commerceConfigured: boolean) {
       if (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()) {
         setCheckoutState({
           status: "error",
-          message: "We only need name, phone, and address to deliver.",
+          message: "We need name, phone, and address to deliver.",
+        });
+        return;
+      }
+
+      if (!customerEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())) {
+        setCheckoutState({
+          status: "error",
+          message: "Add an email for order updates and your receipt.",
         });
         return;
       }

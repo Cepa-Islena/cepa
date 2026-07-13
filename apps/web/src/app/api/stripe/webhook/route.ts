@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripeWebhookSecret } from "@/lib/env";
-import { loadOrderEmailPayload, sendCustomerOrderEmail, sendOwnerOrderEmail } from "@/lib/order-email";
+import { loadOrderEmailPayload, notifyPaidOrder } from "@/lib/order-email";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getStripeClient } from "@/lib/stripe";
 
 export const runtime = "nodejs";
+
+const PAID_EVENTS = new Set([
+  "checkout.session.completed",
+  "checkout.session.async_payment_succeeded",
+]);
+
+const RELEASE_EVENTS = new Set([
+  "checkout.session.expired",
+  "checkout.session.async_payment_failed",
+]);
 
 export async function POST(request: Request) {
   const stripe = getStripeClient();
@@ -46,17 +56,18 @@ export async function POST(request: Request) {
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
-  const orderId = session.metadata?.order_id;
+  const orderId = session.metadata?.order_id || session.client_reference_id || undefined;
 
   if (!orderId) {
     return NextResponse.json({ received: true, duplicate: duplicateEvent });
   }
 
-  const shouldMarkPaid =
-    event.type === "checkout.session.async_payment_succeeded" ||
-    (event.type === "checkout.session.completed" && session.payment_status === "paid");
+  const paymentPaid =
+    session.payment_status === "paid" ||
+    session.payment_status === "no_payment_required" ||
+    event.type === "checkout.session.async_payment_succeeded";
 
-  if (shouldMarkPaid) {
+  if (PAID_EVENTS.has(event.type) && paymentPaid) {
     const { error } = await supabase.rpc("mark_order_paid", {
       target_order_id: orderId,
       checkout_session_id: session.id,
@@ -66,34 +77,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Could not mark order paid." }, { status: 500 });
     }
 
-    // Notify owner (and customer if they left an email). Never fail the webhook on email issues.
-    if (!duplicateEvent) {
-      try {
-        const order = await loadOrderEmailPayload(supabase, orderId);
-        if (order) {
-          // Prefer Stripe session email if cart email was empty.
-          if (!order.customerEmail && session.customer_details?.email) {
-            order.customerEmail = session.customer_details.email;
-          }
-          if (!order.customerEmail && session.customer_email) {
-            order.customerEmail = session.customer_email;
-          }
-
-          await sendOwnerOrderEmail(order);
-          await sendCustomerOrderEmail(order);
+    try {
+      const order = await loadOrderEmailPayload(supabase, orderId);
+      if (order) {
+        if (!order.customerEmail && session.customer_details?.email) {
+          order.customerEmail = session.customer_details.email;
         }
-      } catch {
-        // Email is best-effort; order is already paid.
+        if (!order.customerEmail && session.customer_email) {
+          order.customerEmail = session.customer_email;
+        }
+        await notifyPaidOrder(supabase, order);
       }
+    } catch {
+      // Email is best-effort; payment already succeeded.
     }
   }
 
-  if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
+  if (RELEASE_EVENTS.has(event.type)) {
     const { error } = await supabase.rpc("release_order_reservation", {
       target_order_id: orderId,
     });
 
-    if (error) {
+    if (error && !/already|released|not found|0 rows/i.test(error.message || "")) {
       return NextResponse.json({ error: "Could not release order reservation." }, { status: 500 });
     }
   }

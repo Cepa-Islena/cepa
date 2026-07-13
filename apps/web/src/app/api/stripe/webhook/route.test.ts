@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   createSupabaseServiceClient: vi.fn(),
   getStripeClient: vi.fn(),
   loadOrderEmailPayload: vi.fn(),
+  notifyPaidOrder: vi.fn(),
   sendOwnerOrderEmail: vi.fn(),
   sendCustomerOrderEmail: vi.fn(),
 }));
@@ -23,6 +24,7 @@ vi.mock("@/lib/stripe", () => ({
 
 vi.mock("@/lib/order-email", () => ({
   loadOrderEmailPayload: mocks.loadOrderEmailPayload,
+  notifyPaidOrder: mocks.notifyPaidOrder,
   sendOwnerOrderEmail: mocks.sendOwnerOrderEmail,
   sendCustomerOrderEmail: mocks.sendCustomerOrderEmail,
 }));
@@ -104,6 +106,7 @@ describe("Stripe webhook route", () => {
     vi.clearAllMocks();
     mocks.getStripeWebhookSecret.mockReturnValue("whsec_test");
     mocks.loadOrderEmailPayload.mockResolvedValue(null);
+    mocks.notifyPaidOrder.mockResolvedValue(undefined);
     mocks.sendOwnerOrderEmail.mockResolvedValue({ ok: true, skipped: false, id: "email_1" });
     mocks.sendCustomerOrderEmail.mockResolvedValue({ ok: true, skipped: true, error: "No customer email" });
   });
